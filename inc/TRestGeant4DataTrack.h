@@ -45,6 +45,8 @@ class TRestGeant4DataTrack {
 
     inline void UpdateSteps(const TRestGeant4DataSteps& steps) { fSteps = steps; }  //!
 
+    inline size_t GetNumberOfSteps() const { return fSteps.GetNumberOfSteps(); }
+
     ClassDef(TRestGeant4DataTrack, 1);
 };
 #endif  // REST_TRESTGEANT4DATATRACK_H

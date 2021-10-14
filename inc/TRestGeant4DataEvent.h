@@ -53,6 +53,15 @@ class TRestGeant4DataEvent {
     inline void AddSensitiveVolumeEnergy(Float_t energy) { fSensitiveVolumeEnergy += energy; }
     operator TRestGeant4Event() const;
 
+    inline size_t GetNumberOfTracks() const { return fTracks.size(); }
+    inline size_t GetNumberOfSteps() const {
+        size_t n = 0;
+        for (const auto& track : fTracks) {
+            n += track.GetNumberOfSteps();
+        }
+        return n;
+    }
+
     Bool_t IsEmpty() const { return fTracks.empty(); }
 
    private:
