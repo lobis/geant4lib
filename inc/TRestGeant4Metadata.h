@@ -22,9 +22,8 @@
 
 #ifndef RestCore_TRestGeant4Metadata
 #define RestCore_TRestGeant4Metadata
+
 #include <TMath.h>
-#include <TRestGeant4BiasingVolume.h>
-#include <TRestGeant4ParticleSource.h>
 #include <TRestMetadata.h>
 #include <TString.h>
 #include <TVector2.h>
@@ -37,6 +36,10 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
+
+#include "TRestGeant4BiasingVolume.h"
+#include "TRestGeant4Generator.h"
+#include "TRestGeant4ParticleSource.h"
 
 //------------------------------------------------------------------------------------------------------------------------
 //
@@ -122,6 +125,9 @@ class TRestGeant4Metadata : public TRestMetadata {
 
     /// A GDML materials reference introduced in the header of the GDML of materials definition
     TString fMaterialsReference;
+
+    /// Generator
+    TRestGeant4Generator* fGenerator;
 
     /// Type of spatial generator (surface, volume, custom)
     TString fGenType;
@@ -418,6 +424,6 @@ class TRestGeant4Metadata : public TRestMetadata {
 
     ~TRestGeant4Metadata();
 
-    ClassDef(TRestGeant4Metadata, 9);
+    ClassDef(TRestGeant4Metadata, 10);
 };
 #endif  // RestCore_TRestGeant4Metadata
