@@ -207,19 +207,19 @@ class TRestGeant4Event : public TRestEvent {
     Double_t GetPrimaryEventEnergy(Int_t n = 0) { return fPrimaryEventEnergy[n]; }
 
     Int_t GetNumberOfHits(Int_t volID = -1);
-    Int_t GetNumberOfTracks() { return fNTracks; }
+    Int_t GetNumberOfTracks() const { return fNTracks; }
     Int_t GetNumberOfPrimaries() { return fPrimaryEventDirection.size(); }
-    Int_t GetNumberOfActiveVolumes() { return fNVolumes; }
+    Int_t GetNumberOfActiveVolumes() const { return fNVolumes; }
 
     Int_t isVolumeStored(int n) { return fVolumeStored[n]; }
     TRestGeant4Track* GetTrack(int n) { return &fTrack[n]; }
     TRestGeant4Track* GetTrackByID(int id);
     Int_t GetNumberOfSubEventIDTracks() { return fMaxSubEventID + 1; }
 
-    Double_t GetTotalDepositedEnergy() { return fTotalDepositedEnergy; }
+    Double_t GetTotalDepositedEnergy() const { return fTotalDepositedEnergy; }
     Double_t GetTotalDepositedEnergyFromTracks();
     Double_t GetEnergyDepositedInVolume(Int_t volID) { return fVolumeDepositedEnergy[volID]; }
-    Double_t GetSensitiveVolumeEnergy() { return fSensitiveVolumeEnergy; }
+    Double_t GetSensitiveVolumeEnergy() const { return fSensitiveVolumeEnergy; }
     TVector3 GetMeanPositionInVolume(Int_t volID);
     TVector3 GetFirstPositionInVolume(Int_t volID);
     TVector3 GetLastPositionInVolume(Int_t volID);
@@ -292,9 +292,9 @@ class TRestGeant4Event : public TRestEvent {
         return PerProcessEnergyInSensitive["neutron_elastic"];
     }
 
-    void SetPrimaryEventOrigin(TVector3 pos) { fPrimaryEventOrigin = pos; }
-    void SetPrimaryEventDirection(TVector3 dir) { fPrimaryEventDirection.push_back(dir); }
-    void SetPrimaryEventParticleName(TString pName) { fPrimaryParticleName.push_back(pName); }
+    void SetPrimaryEventOrigin(const TVector3& pos) { fPrimaryEventOrigin = pos; }
+    void SetPrimaryEventDirection(const TVector3& dir) { fPrimaryEventDirection.push_back(dir); }
+    void SetPrimaryEventParticleName(const TString& pName) { fPrimaryParticleName.push_back(pName); }
     void SetPrimaryEventEnergy(Double_t en) { fPrimaryEventEnergy.push_back(en); }
     void ActivateVolumeForStorage(Int_t n) { fVolumeStored[n] = 1; }
     void DisableVolumeForStorage(Int_t n) { fVolumeStored[n] = 0; }
@@ -492,11 +492,11 @@ class TRestGeant4Event : public TRestEvent {
     TPad* DrawEvent(TString option = "") { return DrawEvent(option, true); }
     TPad* DrawEvent(TString option, Bool_t autoBoundaries);
 
-    // Construtor
+    // Constructor
     TRestGeant4Event();
     // Destructor
-    virtual ~TRestGeant4Event();
+    ~TRestGeant4Event() override;
 
-    ClassDef(TRestGeant4Event, 5);  // REST event superclass
+    ClassDef(TRestGeant4Event, 6);  // REST event superclass
 };
 #endif
