@@ -38,9 +38,16 @@ class TRestGeant4DataSteps {
     void InsertStep(const G4Step*);
 
     // Casting
-    operator TRestGeant4Hits() const;
+    // operator TRestGeant4Hits() const;
 
     inline Int_t GetNumberOfSteps() const { return fN; }
+    inline TVector3 GetPosition(size_t index) const { return fPosition[index]; }
+    inline TVector3 GetDirection(size_t index) const { return fMomentumDirection[index]; }
+    inline Float_t GetEnergy(size_t index) const { return fEnergy[index]; }
+    inline Float_t GetKineticEnergy(size_t index) const { return fKineticEnergy[index]; }
+    inline Float_t GetTime(size_t index) const { return fTimeGlobal[index]; }
+    inline Int_t GetProcessID(size_t index) const { return fProcessID[index]; }
+    inline Int_t GetVolumeID(size_t index) const { return fVolumeID[index]; }
 
     ClassDef(TRestGeant4DataSteps, 1);
 };
