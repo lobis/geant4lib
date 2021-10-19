@@ -43,6 +43,8 @@ class TRestGeant4DataEvent {
     explicit TRestGeant4DataEvent(const G4Event*);
 
    public:
+    void Print() const;
+
     void InsertTrack(const G4Track*);
     void UpdateTrack(const G4Track*);
     void InsertStep(const G4Step*);

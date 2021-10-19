@@ -34,6 +34,8 @@ class TRestGeant4DataSteps {
     std::vector<TString> fTargetNucleus;
 
    public:
+    void Print() const;
+
     inline TRestGeant4DataSteps() = default;
     void InsertStep(const G4Step*);
 

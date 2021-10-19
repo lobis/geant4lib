@@ -38,6 +38,8 @@ class TRestGeant4DataTrack {
     explicit TRestGeant4DataTrack(const G4Track*);
 
    public:
+    void Print() const;
+
     void UpdateTrack(const G4Track*);  //!
     void InsertStep(const G4Step*);    //!
 

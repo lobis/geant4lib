@@ -5,6 +5,7 @@
 #include "TRestGeant4DataTrack.h"
 
 #include "TRestGeant4Track.h"
+#include "spdlog/spdlog.h"
 
 TRestGeant4DataTrack::operator TRestGeant4Track() const {
     auto track = TRestGeant4Track();
@@ -21,4 +22,12 @@ TRestGeant4DataTrack::operator TRestGeant4Track() const {
     }
 
     return track;
+}
+void TRestGeant4DataTrack::Print() const {
+    spdlog::warn(
+        "Track ID: {} - Parent ID: {} - Particle: {} - Creator process: {} - Initial KE: {:0.2f} keV - "
+        "#secondaries: {}",
+        fTrackID, fParentID, fParticleName, fCreatorProcess, fInitialKineticEnergy, fNumberOfSecondaries);
+
+    fSteps.Print();
 }
