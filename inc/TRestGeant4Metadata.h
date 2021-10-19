@@ -85,7 +85,7 @@ enum class angular_dist_types {
 extern std::map<string, angular_dist_types> angular_dist_types_map;
 }  // namespace g4_metadata_parameters
 
-//------------------------------------------------------------------------------------------------------------------------
+class G4VPhysicalVolume;
 
 /// The main class to store the *Geant4* simulation conditions that will be used by *restG4*.
 class TRestGeant4Metadata : public TRestMetadata {
@@ -161,6 +161,19 @@ class TRestGeant4Metadata : public TRestMetadata {
 
     /// \brief A vector to store the names of the active volumes.
     std::vector<TString> fActiveVolumes;
+
+    /// \brief A vector to store the names of all physical volumes in the simulation.
+    std::vector<TString> fGeometryVolumes;
+
+    /// \brief A map to store the names of the logical volumes of the geometry (key = physical volume name)
+    std::map<TString, TString> fLogicalVolumesMap;
+
+    /// \brief A map to store the materials of the logical volumes of the geometry (key = logical volume name)
+    std::map<TString, TString> fLogicalVolumesMaterialMap;
+
+    /// \brief A map to store the positions of the physical volumes of the geometry (key = physical volume
+    /// name)
+    std::map<TString, TVector3> fPhysicalVolumesPosition;
 
     /// \brief A vector to store the probability value to write to disk the hits in a
     /// particular event.
@@ -299,6 +312,9 @@ class TRestGeant4Metadata : public TRestMetadata {
     /// It returns false if `registerEmptyTracks` parameter was set to false.
     Bool_t RegisterEmptyTracks() const { return fRegisterEmptyTracks; }
 
+    /// \brief Set geometrical information such as 'fPhysicalVolumesPosition'. Implemented in `restG4`
+    void SetGeometricalInformation(G4VPhysicalVolume*);
+
     /// \brief Used exclusively by restG4 to set the value of the random seed used on
     /// Geant4 simulation.
     void SetSeed(Long_t seed) { fSeed = seed; }
@@ -412,6 +428,9 @@ class TRestGeant4Metadata : public TRestMetadata {
     void SetActiveVolume(TString name, Double_t chance, Double_t maxStep = 0);
 
     void PrintMetadata();
+
+    /// \brief Print geometrical information
+    void PrintGeometryInfo() const;
 
     TRestGeant4Metadata();
     TRestGeant4Metadata(char* cfgFileName, std::string name = "");

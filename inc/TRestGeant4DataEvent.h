@@ -5,6 +5,7 @@
 #ifndef REST_TRESTGEANT4DATAEVENT_H
 #define REST_TRESTGEANT4DATAEVENT_H
 
+#include <TRestEvent.h>
 #include <TString.h>
 
 #include "TRestGeant4DataSteps.h"
@@ -16,7 +17,10 @@ class G4Step;
 
 class TRestGeant4Event;
 
-class TRestGeant4DataEvent {
+class TRestGeant4DataEvent : public TRestEvent {
+   private:
+    void Initialize() override {}
+
    protected:
     Int_t fRunOrigin{};
 
@@ -69,7 +73,7 @@ class TRestGeant4DataEvent {
    private:
     TRestGeant4DataSteps fInitialStep;  //!
 
-    ClassDef(TRestGeant4DataEvent, 1);
+    ClassDef(TRestGeant4DataEvent, 2);
 };
 
 #endif  // REST_TRESTGEANT4DATAEVENT_H

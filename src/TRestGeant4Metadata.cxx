@@ -646,15 +646,18 @@
 ///
 /// <hr>
 ///
+
 #include "TRestGeant4Metadata.h"
+
 using namespace std;
 
 #include <TGeoManager.h>
-
-#include "TRandom.h"
-#include "TRestGDMLParser.h"
+#include <TRandom.h>
+#include <TRestGDMLParser.h>
+#include <spdlog/spdlog.h>
 
 namespace g4_metadata_parameters {
+
 string CleanString(string s) {
     // transform the string to lowercase
     transform(s.begin(), s.end(), s.begin(), ::tolower);
@@ -1192,6 +1195,17 @@ void TRestGeant4Metadata::PrintMetadata() {
         GetBiasingVolume(n).PrintBiasingVolume();
     }
     metadata << "+++++" << endl;
+}
+
+void TRestGeant4Metadata::PrintGeometryInfo() const {
+    metadata << "TRestGeant4Metadata::PrintGeometryInfo" << endl;
+    metadata << "---> Total number of physical volumes: " << fGeometryVolumes.size() << endl;
+    for (const auto& volume : fGeometryVolumes) {
+        auto logicalVolumeName = fLogicalVolumesMap.at(volume);
+        auto materialName = fLogicalVolumesMaterialMap.at(logicalVolumeName);
+        metadata << "---> ---> physical volume: " << volume << " - logical: " << logicalVolumeName
+                 << " - material: " << materialName << endl;
+    }
 }
 
 /////////////////////////////////////////////////
