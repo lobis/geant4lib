@@ -368,9 +368,9 @@ TRestEvent* TRestGeant4NeutronTaggingProcess::ProcessEvent(TRestEvent* evInput) 
                             parents.count(track_child->GetTrackID()) > 0) {
                             // track or parent is in list of tracks, we add to list and add energy
                             parents.insert(track_child->GetTrackID());
-                            neutronsCapturedEDepByNeutronAndChildren += track_child->GetEnergy();
+                            neutronsCapturedEDepByNeutronAndChildren += track_child->GetDepositedEnergy();
                             if (track_child->GetTrackID() == track->GetTrackID()) {
-                                neutronsCapturedEDepByNeutron += track_child->GetEnergy();
+                                neutronsCapturedEDepByNeutron += track_child->GetDepositedEnergy();
                             }
                             for (const auto& vetoId : fVetoVolumeIds) {
                                 neutronsCapturedEDepByNeutronAndChildrenInVeto +=

@@ -1,27 +1,6 @@
-/*************************************************************************
- * This file is part of the REST software framework.                     *
- *                                                                       *
- * Copyright (C) 2016 GIFNA/TREX (University of Zaragoza)                *
- * For more information see http://gifna.unizar.es/trex                  *
- *                                                                       *
- * REST is free software: you can redistribute it and/or modify          *
- * it under the terms of the GNU General Public License as published by  *
- * the Free Software Foundation, either version 3 of the License, or     *
- * (at your option) any later version.                                   *
- *                                                                       *
- * REST is distributed in the hope that it will be useful,               *
- * but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the          *
- * GNU General Public License for more details.                          *
- *                                                                       *
- * You should have a copy of the GNU General Public License along with   *
- * REST in $REST_PATH/LICENSE.                                           *
- * If not, see http://www.gnu.org/licenses/.                             *
- * For the list of contributors see $REST_PATH/CREDITS.                  *
- *************************************************************************/
 
-#ifndef RestCore_TRestGeant4Event
-#define RestCore_TRestGeant4Event
+#ifndef RestLibGeant4_TRestGeant4Event
+#define RestLibGeant4_TRestGeant4Event
 
 #include <TGraph.h>
 #include <TGraph2D.h>
@@ -37,93 +16,76 @@
 #include <iostream>
 #include <map>
 
-#include "TRestGeant4DataEvent.h"
-
 /// An event class to store geant4 generated event information
 
-class TRestGeant4Event : public TRestGeant4DataEvent {
+class G4Event;
+
+class TRestGeant4Event : public TRestEvent {
+   public:
+    inline TRestGeant4Event() : TRestEvent() { Initialize(); }
+    explicit TRestGeant4Event(
+        const G4Event*);  // Not defined in Geant4Lib (defined and used in restG4 to insert data)
+
+    inline ~TRestGeant4Event() override = default;
+
+    void Initialize() override;
+
+   protected:
+    Int_t fRunOrigin;
+
+    Int_t fRunID;
+    Int_t fEventID;
+    Int_t fSubEventID;
+
+    TVector3 fPrimaryEventOrigin;
+
+    Float_t fSensitiveVolumeEnergy;
+    Float_t fTotalDepositedEnergy;
+
+    std::vector<TString> fPrimaryParticleName;
+    std::vector<Float_t> fPrimaryEnergy;
+    std::vector<TVector3> fPrimaryPosition;
+    std::vector<TVector3> fPrimaryDirection;
+
+    TString fSubEventPrimaryParticleName = "";
+    Float_t fSubEventPrimaryEnergy;
+    TVector3 fSubEventPrimaryPosition;
+    TVector3 fSubEventPrimaryDirection;
+
+    std::vector<TRestGeant4Track> fTracks;
+
+    TRestGeant4Hits fInitialStep;  //! first step (with SteppingVerbose) occurs before track is spawned!
+
+    std::map<TString, Float_t> fEnergyDepositedInVolumeMap{};
+
+   public:
+    void InsertTrack(const G4Track*);
+    void UpdateTrack(const G4Track*);
+    void InsertStep(const G4Step*);
+
+    inline Int_t GetEventID() const { return fEventID; }
+    inline Int_t GetSubEventID() const { return fSubEventID; }
+    inline void SetSubEventID(Int_t subEventID) { fSubEventID = subEventID; }
+    inline Float_t GetSensitiveVolumeEnergy() const { return fSensitiveVolumeEnergy; }
+    inline void AddSensitiveVolumeEnergy(Float_t energy) { fSensitiveVolumeEnergy += energy; }
+    inline Bool_t IsEmpty() const { return fTracks.empty(); }
+
+    inline TVector3 GetPrimaryEventOrigin() { return fPrimaryPosition[0]; }
+
+    inline size_t GetNumberOfPrimaries() const { return fPrimaryParticleName.size(); }
+    inline TString GetPrimaryEventParticleName(Int_t n = 0) const { return fPrimaryParticleName[n]; }
+    inline TVector3 GetPrimaryEventPosition(Int_t n = 0) const { return fPrimaryPosition[n]; }
+    inline TVector3 GetPrimaryEventDirection(Int_t n = 0) const { return fPrimaryDirection[n]; }
+    inline Double_t GetPrimaryEventEnergy(Int_t n = 0) { return fPrimaryEnergy[n]; }
+
+    inline size_t GetNumberOfTracks() const { return fTracks.size(); }
+    size_t GetNumberOfHits() const;
+
    private:
     Double_t fMinX, fMaxX;            //!
     Double_t fMinY, fMaxY;            //!
     Double_t fMinZ, fMaxZ;            //!
     Double_t fMinEnergy, fMaxEnergy;  //!
-
-    Bool_t PerProcessEnergyInitFlag = false;
-    std::map<string, Double_t> PerProcessEnergyInSensitive;
-
-    std::vector<TRestGeant4Track> fTracks;
-
-    /*
-    void inline InitializePerProcessEnergyInSensitive() {
-        PerProcessEnergyInitFlag = true;
-        PerProcessEnergyInSensitive["photoelectric"] = 0;
-        PerProcessEnergyInSensitive["compton"] = 0;
-        PerProcessEnergyInSensitive["electron_ionization"] = 0;
-        PerProcessEnergyInSensitive["ion_ionization"] = 0;
-        PerProcessEnergyInSensitive["alpha_ionization"] = 0;
-        PerProcessEnergyInSensitive["msc"] = 0;
-        PerProcessEnergyInSensitive["hadronic_ionization"] = 0;
-        PerProcessEnergyInSensitive["proton_ionization"] = 0;
-        PerProcessEnergyInSensitive["hadronic_elastic"] = 0;
-        PerProcessEnergyInSensitive["neutron_elastic"] = 0;
-
-        string volume_name;
-        string process_name;
-        TRestGeant4Track* track;
-        TRestGeant4Hits* hits;
-        Double_t energy;
-
-        for (Int_t track_id = 0; track_id < GetNumberOfTracks(); track_id++) {
-            track = GetTrack(track_id);
-
-            if (track->GetEnergyInVolume(0) == 0) {
-                continue;
-            }
-
-            hits = track->GetHits();
-
-            for (Int_t hit_id = 0; hit_id < hits->GetNumberOfHits(); hit_id++) {
-                if (hits->GetVolumeID(hit_id) != 0) {
-                    continue;
-                }
-
-                process_name = (string)track->GetProcessName(hits->GetHitProcess(hit_id));
-                energy = hits->GetEnergy(hit_id);
-                if (process_name == "phot") {
-                    PerProcessEnergyInSensitive["photoelectric"] += energy;
-                } else if (process_name == "compt") {
-                    PerProcessEnergyInSensitive["compton"] += energy;
-                } else if (process_name == "eIoni" || process_name == "e-Step" || process_name == "e+Step") {
-                    PerProcessEnergyInSensitive["electron_ionization"] += energy;
-                } else if (process_name == "ionIoni") {
-                    PerProcessEnergyInSensitive["ion_ionization"] += energy;
-                    if (track->GetParticleName() == "alpha") {
-                        PerProcessEnergyInSensitive["alpha_ionization"] += energy;
-                    }
-                } else if (process_name == "msc") {
-                    PerProcessEnergyInSensitive["msc"] += energy;
-                } else if (process_name == "hIoni") {
-                    PerProcessEnergyInSensitive["hadronic_ionization"] += energy;
-                    if (track->GetParticleName() == "proton") {
-                        PerProcessEnergyInSensitive["proton_ionization"] += energy;
-                    }
-                } else if (process_name == "hadElastic") {
-                    PerProcessEnergyInSensitive["hadronic_elastic"] += energy;
-                    if (track->GetParticleName() == "neutron") {
-                        PerProcessEnergyInSensitive["neutron_elastic"] += energy;
-                    }
-                } else if (process_name == "Transportation") {
-                    if (track->GetParticleName() == "proton") {
-                        PerProcessEnergyInSensitive["hadronic_ionization"] += energy;
-                        PerProcessEnergyInSensitive["proton_ionization"] += energy;
-                    } else if (track->GetParticleName() == "e-" || track->GetParticleName() == "e+") {
-                        PerProcessEnergyInSensitive["electron_ionization"] += energy;
-                    }
-                }
-            }
-        }
-    }
-    */
 
    protected:
     // TODO These graphs should be placed in TRestTrack?
@@ -173,27 +135,6 @@ class TRestGeant4Event : public TRestGeant4DataEvent {
     TH1D* GetYHistogram(Int_t gridElement, std::vector<TString> optList);
     TH1D* GetZHistogram(Int_t gridElement, std::vector<TString> optList);
 
-    TVector3 fPrimaryEventOrigin;
-
-    /*
-    std::vector<TString> fPrimaryParticleName;
-    std::vector<TVector3> fPrimaryEventDirection;
-    std::vector<Double_t> fPrimaryEventEnergy;
-    */
-
-    Double_t fTotalDepositedEnergy;
-
-    /*
-    Int_t fNVolumes;
-    std::vector<Int_t> fVolumeStored;
-    std::vector<string> fVolumeStoredNames;
-    std::vector<Double_t> fVolumeDepositedEnergy;
-    */
-
-    Int_t fMaxSubEventID;
-
-    std::map<TString, Float_t> fEnergyDepositedInVolumeMap{};
-
    public:
     void SetBoundaries();
     void SetBoundaries(Double_t xMin, Double_t xMax, Double_t yMin, Double_t yMax, Double_t zMin,
@@ -202,7 +143,6 @@ class TRestGeant4Event : public TRestGeant4DataEvent {
     //    Int_t isVolumeStored(int n) { return fVolumeStored[n]; }
     TRestGeant4Track* GetTrack(int n) { return (TRestGeant4Track*)&fTracks[n]; }
     TRestGeant4Track* GetTrackByID(int id);
-    Int_t GetNumberOfSubEventIDTracks() { return fMaxSubEventID + 1; }
 
     Double_t GetTotalDepositedEnergy() const { return fTotalDepositedEnergy; }
     Double_t GetTotalDepositedEnergyFromTracks();
@@ -210,81 +150,16 @@ class TRestGeant4Event : public TRestGeant4DataEvent {
         return fEnergyDepositedInVolumeMap.at(volumeName);
     }
 
-    Double_t GetSensitiveVolumeEnergy() const { return fSensitiveVolumeEnergy; }
-
-    TVector3 GetMeanPositionInVolume(Int_t volID);
-    TVector3 GetFirstPositionInVolume(Int_t volID);
-    TVector3 GetLastPositionInVolume(Int_t volID);
-    TVector3 GetPositionDeviationInVolume(Int_t volID);
+    TVector3 GetMeanPositionInVolume(const TString& volumeName);
+    TVector3 GetFirstPositionInVolume(const TString& volumeName);
+    TVector3 GetLastPositionInVolume(const TString& volumeName);
+    TVector3 GetPositionDeviationInVolume(const TString& volumeName);
 
     TRestHits GetHits();
     TRestHits GetHitsInVolume(const TString& volumeName);
 
     Int_t GetNumberOfTracksForParticle(const TString& particleName);
     Float_t GetEnergyDepositedByParticle(const TString& particleName);
-
-    /*
-    Double_t GetEnergyInSensitiveFromProcessPhoto() {
-        if (!PerProcessEnergyInitFlag) {
-            InitializePerProcessEnergyInSensitive();
-        }
-        return PerProcessEnergyInSensitive["photoelectric"];
-    }
-    Double_t GetEnergyInSensitiveFromProcessCompton() {
-        if (!PerProcessEnergyInitFlag) {
-            InitializePerProcessEnergyInSensitive();
-        }
-        return PerProcessEnergyInSensitive["compton"];
-    }
-    Double_t GetEnergyInSensitiveFromProcessEIoni() {
-        if (!PerProcessEnergyInitFlag) {
-            InitializePerProcessEnergyInSensitive();
-        }
-        return PerProcessEnergyInSensitive["electron_ionization"];
-    }
-    Double_t GetEnergyInSensitiveFromProcessIonIoni() {
-        if (!PerProcessEnergyInitFlag) {
-            InitializePerProcessEnergyInSensitive();
-        }
-        return PerProcessEnergyInSensitive["ion_ionization"];
-    }
-    Double_t GetEnergyInSensitiveFromProcessAlphaIoni() {
-        if (!PerProcessEnergyInitFlag) {
-            InitializePerProcessEnergyInSensitive();
-        }
-        return PerProcessEnergyInSensitive["alpha_ionization"];
-    }
-    Double_t GetEnergyInSensitiveFromProcessMsc() {
-        if (!PerProcessEnergyInitFlag) {
-            InitializePerProcessEnergyInSensitive();
-        }
-        return PerProcessEnergyInSensitive["msc"];
-    }
-    Double_t GetEnergyInSensitiveFromProcessHadronIoni() {
-        if (!PerProcessEnergyInitFlag) {
-            InitializePerProcessEnergyInSensitive();
-        }
-        return PerProcessEnergyInSensitive["hadronic_ionization"];
-    }
-    Double_t GetEnergyInSensitiveFromProcessProtonIoni() {
-        if (!PerProcessEnergyInitFlag) {
-            InitializePerProcessEnergyInSensitive();
-        }
-        return PerProcessEnergyInSensitive["proton_ionization"];
-    }
-    Double_t GetEnergyInSensitiveFromProcessHadronElastic() {
-        if (!PerProcessEnergyInitFlag) {
-            InitializePerProcessEnergyInSensitive();
-        }
-        return PerProcessEnergyInSensitive["hadronic_elastic"];
-    }
-    Double_t GetEnergyInSensitiveFromProcessNeutronElastic() {
-        if (!PerProcessEnergyInitFlag) {
-            InitializePerProcessEnergyInSensitive();
-        }
-        return PerProcessEnergyInSensitive["neutron_elastic"];
-    }
-    */
 
     Int_t GetLowestTrackID() {
         Int_t lowestID = 0;
@@ -298,184 +173,12 @@ class TRestGeant4Event : public TRestGeant4DataEvent {
         return lowestID;
     }
 
-    /*
-    Bool_t isRadiactiveDecay() {
-        for (int n = 0; n < GetNumberOfTracks(); n++)
-            if (GetTrack(n)->isRadiactiveDecay()) return true;
-        return false;
-    }
-
-    Bool_t isPhotoElectric() {
-        for (int n = 0; n < GetNumberOfTracks(); n++)
-            if (GetTrack(n)->isPhotoElectric()) return true;
-        return false;
-    }
-    Bool_t isCompton() {
-        for (int n = 0; n < GetNumberOfTracks(); n++)
-            if (GetTrack(n)->isCompton()) return true;
-        return false;
-    }
-    Bool_t isBremstralung() {
-        for (int n = 0; n < GetNumberOfTracks(); n++)
-            if (GetTrack(n)->isBremstralung()) return true;
-        return false;
-    }
-
-    Bool_t ishadElastic() {
-        for (int n = 0; n < GetNumberOfTracks(); n++)
-            if (GetTrack(n)->ishadElastic()) return true;
-        return false;
-    }
-    Bool_t isneutronInelastic() {
-        for (int n = 0; n < GetNumberOfTracks(); n++)
-            if (GetTrack(n)->isneutronInelastic()) return true;
-        return false;
-    }
-
-    Bool_t isnCapture() {
-        for (int n = 0; n < GetNumberOfTracks(); n++)
-            if (GetTrack(n)->isnCapture()) return true;
-        return false;
-    }
-
-    Bool_t ishIoni() {
-        for (int n = 0; n < GetNumberOfTracks(); n++)
-            if (GetTrack(n)->ishIoni()) return true;
-        return false;
-    }
-
-    Bool_t isphotonNuclear() {
-        for (int n = 0; n < GetNumberOfTracks(); n++)
-            if (GetTrack(n)->isphotonNuclear()) return true;
-        return false;
-    }
-
-    Bool_t isAlpha() {
-        for (int n = 0; n < GetNumberOfTracks(); n++)
-            if (GetTrack(n)->GetParticleName() == "alpha") return true;
-        return false;
-    }
-
-    Bool_t isNeutron() {
-        for (int n = 0; n < GetNumberOfTracks(); n++)
-            if (GetTrack(n)->GetParticleName() == "neutron") return true;
-        return false;
-    }
-
-    Bool_t isArgon() {
-        for (int n = 0; n < GetNumberOfTracks(); n++)
-            if ((GetTrack(n)->GetParticleName()).Contains("Ar")) return true;
-        return false;
-    }
-
-    Bool_t isXenon() {
-        for (int n = 0; n < GetNumberOfTracks(); n++)
-            if ((GetTrack(n)->GetParticleName()).Contains("Xe")) return true;
-        return false;
-    }
-
-    Bool_t isNeon() {
-        for (int n = 0; n < GetNumberOfTracks(); n++)
-            if ((GetTrack(n)->GetParticleName()).Contains("Ne")) return true;
-        return false;
-    }
-     */
-    /// Processes and particles in a given volume
-    /*
-    Bool_t isRadiactiveDecayInVolume(Int_t volID) {
-        for (int n = 0; n < GetNumberOfTracks(); n++)
-            if (GetTrack(n)->isRadiactiveDecayInVolume(volID)) return true;
-        return false;
-    }
-
-    Bool_t isPhotoElectricInVolume(Int_t volID) {
-        for (int n = 0; n < GetNumberOfTracks(); n++)
-            if (GetTrack(n)->isPhotoElectricInVolume(volID)) return true;
-        return false;
-    }
-    Bool_t isPhotonNuclearInVolume(Int_t volID) {
-        for (int n = 0; n < GetNumberOfTracks(); n++)
-            if (GetTrack(n)->isPhotonNuclearInVolume(volID)) return true;
-        return false;
-    }
-    Bool_t isComptonInVolume(Int_t volID) {
-        for (int n = 0; n < GetNumberOfTracks(); n++)
-            if (GetTrack(n)->isComptonInVolume(volID)) return true;
-        return false;
-    }
-    Bool_t isBremstralungInVolume(Int_t volID) {
-        for (int n = 0; n < GetNumberOfTracks(); n++)
-            if (GetTrack(n)->isBremstralungInVolume(volID)) return true;
-        return false;
-    }
-
-    Bool_t isHadElasticInVolume(Int_t volID) {
-        for (int n = 0; n < GetNumberOfTracks(); n++)
-            if (GetTrack(n)->isHadElasticInVolume(volID)) return true;
-        return false;
-    }
-    Bool_t isNeutronInelasticInVolume(Int_t volID) {
-        for (int n = 0; n < GetNumberOfTracks(); n++)
-            if (GetTrack(n)->isNeutronInelasticInVolume(volID)) return true;
-        return false;
-    }
-
-    Bool_t isNCaptureInVolume(Int_t volID) {
-        for (int n = 0; n < GetNumberOfTracks(); n++)
-            if (GetTrack(n)->isNCaptureInVolume(volID)) return true;
-        return false;
-    }
-
-    Bool_t ishIoniInVolume(Int_t volID) {
-        for (int n = 0; n < GetNumberOfTracks(); n++)
-            if (GetTrack(n)->isHIoniInVolume(volID)) return true;
-        return false;
-    }
-
-    Bool_t isAlphaInVolume(Int_t volID) {
-        for (int n = 0; n < GetNumberOfTracks(); n++)
-            if (GetTrack(n)->isAlphaInVolume(volID)) return true;
-        return false;
-    }
-
-    Bool_t isNeutronInVolume(Int_t volID) {
-        for (int n = 0; n < GetNumberOfTracks(); n++)
-            if (GetTrack(n)->isNeutronInVolume(volID)) return true;
-        return false;
-    }
-
-    Bool_t isArgonInVolume(Int_t volID) {
-        for (int n = 0; n < GetNumberOfTracks(); n++)
-            if (GetTrack(n)->isArgonInVolume(volID)) return true;
-        return false;
-    }
-
-    Bool_t isXenonInVolume(Int_t volID) {
-        for (int n = 0; n < GetNumberOfTracks(); n++)
-            if (GetTrack(n)->isXenonInVolume(volID)) return true;
-        return false;
-    }
-
-    Bool_t isNeonInVolume(Int_t volID) {
-        for (int n = 0; n < GetNumberOfTracks(); n++)
-            if (GetTrack(n)->isNeonInVolume(volID)) return true;
-        return false;
-    }
-    */
-
-    void Initialize();
-
     /// maxTracks : number of tracks to print, 0 = all
     void PrintActiveVolumes();
     // void PrintEvent(int maxTracks = 0, int maxHits = 0);
 
     TPad* DrawEvent(TString option = "") { return DrawEvent(option, true); }
     TPad* DrawEvent(TString option, Bool_t autoBoundaries);
-
-    // Constructor
-    TRestGeant4Event();
-    // Destructor
-    ~TRestGeant4Event() override;
 
     ClassDef(TRestGeant4Event, 7);  // REST event superclass
 };

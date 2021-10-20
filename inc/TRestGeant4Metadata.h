@@ -20,8 +20,8 @@
  * For the list of contributors see $REST_PATH/CREDITS.                  *
  *************************************************************************/
 
-#ifndef RestCore_TRestGeant4Metadata
-#define RestCore_TRestGeant4Metadata
+#ifndef RestLibGeant4_TRestGeant4Metadata
+#define RestLibGeant4_TRestGeant4Metadata
 #include <TMath.h>
 #include <TRestGeant4BiasingVolume.h>
 #include <TRestGeant4ParticleSource.h>
@@ -439,4 +439,4 @@ class TRestGeant4Metadata : public TRestMetadata {
 
     ClassDef(TRestGeant4Metadata, 9);
 };
-#endif  // RestCore_TRestGeant4Metadata
+#endif  // RestLibGeant4_TRestGeant4Metadata

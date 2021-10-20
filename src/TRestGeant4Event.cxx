@@ -27,13 +27,7 @@ using namespace std;
 
 ClassImp(TRestGeant4Event);
 
-TRestGeant4Event::TRestGeant4Event() { Initialize(); }
-
-TRestGeant4Event::~TRestGeant4Event() = default;
-
 void TRestGeant4Event::Initialize() {
-    TRestGeant4DataEvent::Initialize();
-
     fXZHitGraph = nullptr;
     fYZHitGraph = nullptr;
     fXYHitGraph = nullptr;
@@ -58,7 +52,7 @@ void TRestGeant4Event::Initialize() {
 
     fTotalDepositedEnergy = 0;
     fSensitiveVolumeEnergy = 0;
-    fMaxSubEventID = 0;
+    // fMaxSubEventID = 0;
 
     fMinX = 1e20;
     fMaxX = -1e20;
@@ -81,16 +75,16 @@ Double_t TRestGeant4Event::GetTotalDepositedEnergyFromTracks() {
     return eDep;
 }
 
-TVector3 TRestGeant4Event::GetMeanPositionInVolume(Int_t volID) {
+TVector3 TRestGeant4Event::GetMeanPositionInVolume(const TString& volumeName) {
     TVector3 pos;
     Double_t eDep = 0;
 
     for (int t = 0; t < GetNumberOfTracks(); t++) {
         TRestGeant4Track* tck = GetTrack(t);
-        if (tck->GetEnergyInVolume(volID) > 0) {
-            pos += tck->GetMeanPositionInVolume(volID) * tck->GetEnergyInVolume(volID);
+        if (tck->GetEnergyInVolume(volumeName) > 0) {
+            pos += tck->GetMeanPositionInVolume(volumeName) * tck->GetEnergyInVolume(volumeName);
 
-            eDep += tck->GetEnergyInVolume(volID);
+            eDep += tck->GetEnergyInVolume(volumeName);
         }
     }
 
@@ -110,13 +104,13 @@ TVector3 TRestGeant4Event::GetMeanPositionInVolume(Int_t volID) {
 ///
 /// \param volID Int_t specifying volume ID
 ///
-TVector3 TRestGeant4Event::GetPositionDeviationInVolume(Int_t volID) {
-    TVector3 meanPos = this->GetMeanPositionInVolume(volID);
+TVector3 TRestGeant4Event::GetPositionDeviationInVolume(const TString& volumeName) {
+    TVector3 meanPos = this->GetMeanPositionInVolume(volumeName);
 
     Double_t nan = TMath::QuietNaN();
-    if (meanPos == TVector3(nan, nan, nan)) return TVector3(nan, nan, nan);
+    if (meanPos == TVector3(nan, nan, nan)) return {nan, nan, nan};
 
-    TRestHits hitsInVolume = GetHitsInVolume(volID);
+    TRestHits hitsInVolume = GetHitsInVolume(volumeName);
 
     Double_t edep = 0;
     TVector3 deviation = TVector3(0, 0, 0);
@@ -141,9 +135,10 @@ TVector3 TRestGeant4Event::GetPositionDeviationInVolume(Int_t volID) {
 ///
 /// \param volID Int_t specifying volume ID
 ///
-TVector3 TRestGeant4Event::GetFirstPositionInVolume(Int_t volID) {
+TVector3 TRestGeant4Event::GetFirstPositionInVolume(const TString& volumeName) {
     for (int t = 0; t < GetNumberOfTracks(); t++)
-        if (GetTrack(t)->GetEnergyInVolume(volID) > 0) return GetTrack(t)->GetFirstPositionInVolume(volID);
+        if (GetTrack(t)->GetEnergyInVolume(volumeName) > 0)
+            return GetTrack(t)->GetFirstPositionInVolume(volumeName);
 
     TVector3 pos;
     Double_t nan = TMath::QuietNaN();
@@ -159,9 +154,10 @@ TVector3 TRestGeant4Event::GetFirstPositionInVolume(Int_t volID) {
 ///
 /// \param volID Int_t specifying volume ID
 ///
-TVector3 TRestGeant4Event::GetLastPositionInVolume(Int_t volID) {
+TVector3 TRestGeant4Event::GetLastPositionInVolume(const TString& volumeName) {
     for (int t = GetNumberOfTracks() - 1; t >= 0; t--)
-        if (GetTrack(t)->GetEnergyInVolume(volID) > 0) return GetTrack(t)->GetLastPositionInVolume(volID);
+        if (GetTrack(t)->GetEnergyInVolume(volumeName) > 0)
+            return GetTrack(t)->GetLastPositionInVolume(volumeName);
 
     TVector3 pos;
     Double_t nan = TMath::QuietNaN();
@@ -216,10 +212,18 @@ Float_t TRestGeant4Event::GetEnergyDepositedByParticle(const TString& particleNa
     Float_t energy = 0;
     for (auto& track : fTracks) {
         if (track.GetParticleName().EqualTo(particleName)) {
-            energy += track.GetEnergy();
+            energy += track.GetDepositedEnergy();
         }
     }
     return energy;
+}
+
+size_t TRestGeant4Event::GetNumberOfHits() const {
+    size_t n = 0;
+    for (const auto& track : fTracks) {
+        n += track.GetNumberOfHits();
+    }
+    return n;
 }
 
 /*
@@ -228,7 +232,7 @@ Float_t TRestGeant4Event::GetEnergyDepositedByParticle(const TString& particleNa
 /// a specific volume is given as argument only the hits of that specific volume
 /// will be counted.
 ///
-Int_t TRestGeant4Event::GetNumberOfHits(Int_t volID) {
+Int_t TRestGeant4Event::GetNumberOfHits(const TString& volumeName) {
     Int_t hits = 0;
     for (int i = 0; i < fNTracks; i++) {
         hits += GetTrack(i)->GetNumberOfHits(volID);
@@ -242,7 +246,7 @@ Int_t TRestGeant4Event::GetNumberOfHits(Int_t volID) {
 /// a specific volume is given as argument only the hits of that specific volume
 /// will be added to the TRestHits returned object.
 ///
-TRestHits TRestGeant4Event::GetHits(Int_t volID) {
+TRestHits TRestGeant4Event::GetHits(const TString& volumeName) {
     TRestHits hits;
     for (int t = 0; t < fNTracks; t++) {
         TRestGeant4Hits* g4Hits = GetTrack(t)->GetHits();
@@ -343,7 +347,7 @@ void TRestGeant4Event::SetBoundaries() {
 }
 
 /* Get{XY,YZ,XZ}MultiGraph methods */
-TMultiGraph* TRestGeant4Event::GetXYMultiGraph(Int_t gridElement, std::vector<TString> pcsList,
+TMultiGraph* TRestGeant4Event::GetXYMultiGraph(Int_t gridElement, vector<TString> pcsList,
                                                Double_t minPointSize, Double_t maxPointSize) {
     if (fXYHitGraph) {
         delete[] fXYHitGraph;

@@ -20,8 +20,8 @@
  * For the list of contributors see $REST_PATH/CREDITS.                  *
  *************************************************************************/
 
-#ifndef RestCore_TRestGeant4AnalysisProcess
-#define RestCore_TRestGeant4AnalysisProcess
+#ifndef RestLibGeant4_TRestGeant4AnalysisProcess
+#define RestLibGeant4_TRestGeant4AnalysisProcess
 
 #include <TRestGeant4Event.h>
 #include <TRestGeant4Metadata.h>

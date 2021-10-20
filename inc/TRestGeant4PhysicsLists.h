@@ -14,8 +14,8 @@
 ///
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef RestCore_TRestGeant4PhysicsLists
-#define RestCore_TRestGeant4PhysicsLists
+#ifndef RestLibGeant4_TRestGeant4PhysicsLists
+#define RestLibGeant4_TRestGeant4PhysicsLists
 
 #include <TRestMetadata.h>
 #include <TString.h>

@@ -12,8 +12,8 @@
 ///                 Javier Galan/JuanAn Garcia
 ///_______________________________________________________________________________
 
-#ifndef RestCore_TRestGeant4EventViewer
-#define RestCore_TRestGeant4EventViewer
+#ifndef RestLibGeant4_TRestGeant4EventViewer
+#define RestLibGeant4_TRestGeant4EventViewer
 
 #include "TRestEveEventViewer.h"
 #include "TRestGeant4Event.h"

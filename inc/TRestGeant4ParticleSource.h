@@ -14,8 +14,8 @@
 ///
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef RestCore_TRestGeant4ParticleSource
-#define RestCore_TRestGeant4ParticleSource
+#ifndef RestLibGeant4_TRestGeant4ParticleSource
+#define RestLibGeant4_TRestGeant4ParticleSource
 
 #include <TString.h>
 #include <TVector2.h>

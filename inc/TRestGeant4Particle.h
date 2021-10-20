@@ -13,8 +13,8 @@
 ///
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef RestCore_TRestGeant4Particle
-#define RestCore_TRestGeant4Particle
+#ifndef RestLibGeant4_TRestGeant4Particle
+#define RestLibGeant4_TRestGeant4Particle
 
 #include <TString.h>
 #include <TVector3.h>

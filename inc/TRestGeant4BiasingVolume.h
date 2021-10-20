@@ -13,8 +13,8 @@
 ///                 J. Galan
 ///_______________________________________________________________________________
 
-#ifndef RestCore_TRestGeant4BiasingVolume
-#define RestCore_TRestGeant4BiasingVolume
+#ifndef RestLibGeant4_TRestGeant4BiasingVolume
+#define RestLibGeant4_TRestGeant4BiasingVolume
 
 #include <iostream>
 

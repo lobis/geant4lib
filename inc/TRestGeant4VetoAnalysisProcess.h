@@ -20,8 +20,8 @@
  * For the list of contributors see $REST_PATH/CREDITS.                  *
  *************************************************************************/
 
-#ifndef RestCore_TRestGeant4VetoAnalysisProcess
-#define RestCore_TRestGeant4VetoAnalysisProcess
+#ifndef RestLibGeant4_TRestGeant4VetoAnalysisProcess
+#define RestLibGeant4_TRestGeant4VetoAnalysisProcess
 
 #include <TRestGeant4Event.h>
 #include <TRestGeant4Metadata.h>
@@ -128,4 +128,4 @@ class TRestGeant4VetoAnalysisProcess : public TRestEventProcess {
 
     ClassDef(TRestGeant4VetoAnalysisProcess, 1);
 };
-#endif  // RestCore_TRestGeant4VetoAnalysisProcess
+#endif  // RestLibGeant4_TRestGeant4VetoAnalysisProcess
