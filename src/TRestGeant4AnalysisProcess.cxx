@@ -452,6 +452,7 @@ TRestEvent* TRestGeant4AnalysisProcess::ProcessEvent(TRestEvent* evInput) {
     obsName = this->GetName() + (TString) ".totalEdep";
     SetObservableValue((string) "totalEdep", energyTotal);
 
+    /*
     Int_t photo = 0;
     if (fOutputG4Event->isPhotoElectric()) photo = 1;
     SetObservableValue((string) "photoelectric", photo);
@@ -541,6 +542,7 @@ TRestEvent* TRestGeant4AnalysisProcess::ProcessEvent(TRestEvent* evInput) {
         else
             SetObservableValue(obsName, 0);
     }
+     */
     for (unsigned int n = 0; n < fParticleTrackCounter.size(); n++) {
         Int_t nT = fOutputG4Event->GetNumberOfTracksForParticle(fParticleTrackCounter[n]);
         string obsName = fTrackCounterObservables[n];

@@ -329,7 +329,7 @@ TRestEvent* TRestGeant4NeutronTaggingProcess::ProcessEvent(TRestEvent* evInput) 
         if (particle_name == "neutron") {
             auto hits = track->GetHits();
             for (int j = 0; j < hits->GetNumberOfHits(); j++) {
-                string process_name = (string)track->GetProcessName(hits->GetProcess(j));
+                string process_name = (string)(hits->GetProcessName(j).Data());
                 if (process_name == "nCapture") {
                     // << "Neutron capture!!!!!! " << particle_name << "trackId " << track->GetTrackID()
                     //    << " hit " << j << endl;
@@ -343,7 +343,7 @@ TRestEvent* TRestGeant4NeutronTaggingProcess::ProcessEvent(TRestEvent* evInput) 
                     fNeutronsCapturedPosY.push_back(hits->GetY(j));
                     fNeutronsCapturedPosZ.push_back(hits->GetZ(j));
 
-                    Int_t volumeId = hits->GetVolumeId(j);
+                    Int_t volumeId = hits->GetVolumeID(j);
                     Int_t isCaptureVolume = 0;
                     for (const auto& id : fCaptureVolumeIds) {
                         if (volumeId == id) {
@@ -436,7 +436,7 @@ TRestEvent* TRestGeant4NeutronTaggingProcess::ProcessEvent(TRestEvent* evInput) 
                 fGammasNeutronCapturePosY.push_back(hits->GetY(0));
                 fGammasNeutronCapturePosZ.push_back(hits->GetZ(0));
 
-                Int_t volumeId = hits->GetVolumeId(0);
+                Int_t volumeId = hits->GetVolumeID(0);
                 Int_t isCaptureVolume = 0;
                 for (const auto& id : fCaptureVolumeIds) {
                     if (volumeId == id) {
@@ -469,10 +469,10 @@ TRestEvent* TRestGeant4NeutronTaggingProcess::ProcessEvent(TRestEvent* evInput) 
             // check if neutron exits shielding
             auto hits = track->GetHits();
             for (int j = 0; j < hits->GetNumberOfHits(); j++) {
-                string process_name = (string)track->GetProcessName(hits->GetProcess(j));
+                string process_name = string(hits->GetProcessName(j).Data());
                 if (process_name == "Transportation") {
                     for (const auto& id : fShieldingVolumeIds) {
-                        if (hits->GetVolumeId(j) == id) {
+                        if (hits->GetVolumeID(j) == id) {
                             // transportation and shielding == exits shielding
                             if (secondaryNeutrons.count(track->GetTrackID()) == 0) {
                                 // first time adding this secondary neutron
@@ -485,7 +485,7 @@ TRestEvent* TRestGeant4NeutronTaggingProcess::ProcessEvent(TRestEvent* evInput) 
                             fSecondaryNeutronsShieldingExitPosY.push_back(hits->GetY(j));
                             fSecondaryNeutronsShieldingExitPosZ.push_back(hits->GetZ(j));
 
-                            Int_t volumeId = hits->GetVolumeId(j);
+                            Int_t volumeId = hits->GetVolumeID(j);
                             Int_t isCaptureVolume = 0;
                             for (const auto& id : fCaptureVolumeIds) {
                                 if (volumeId == id) {

@@ -27,29 +27,13 @@ using namespace std;
 
 ClassImp(TRestGeant4Event);
 
-TRestGeant4Event::TRestGeant4Event() {
-    fNVolumes = 0;
-    // TRestGeant4Event default constructor
+TRestGeant4Event::TRestGeant4Event() { Initialize(); }
 
-    Initialize();
-}
-
-TRestGeant4Event::~TRestGeant4Event() {
-    // TRestGeant4Event destructor
-}
+TRestGeant4Event::~TRestGeant4Event() = default;
 
 void TRestGeant4Event::Initialize() {
-    TRestEvent::Initialize();
+    TRestGeant4DataEvent::Initialize();
 
-    fPrimaryParticleName.clear();
-    fPrimaryEventDirection.clear();
-    fPrimaryEventEnergy.clear();
-    fPrimaryEventOrigin.SetXYZ(0, 0, 0);
-
-    fTrack.clear();
-    fNTracks = 0;
-
-    // ClearVolumes();
     fXZHitGraph = nullptr;
     fYZHitGraph = nullptr;
     fXYHitGraph = nullptr;
@@ -89,41 +73,10 @@ void TRestGeant4Event::Initialize() {
     fMaxEnergy = -1e20;
 }
 
-void TRestGeant4Event::AddActiveVolume(const string& volumeName) {
-    fNVolumes++;
-    fVolumeStored.push_back(1);
-    fVolumeStoredNames.push_back(volumeName);
-    fVolumeDepositedEnergy.push_back(0);
-}
-
-void TRestGeant4Event::ClearVolumes() {
-    fNVolumes = 0;
-    fVolumeStored.clear();
-    fVolumeStoredNames.clear();
-    fVolumeDepositedEnergy.clear();
-}
-
-void TRestGeant4Event::AddEnergyDepositToVolume(Int_t volID, Double_t eDep) {
-    fVolumeDepositedEnergy[volID] += eDep;
-}
-
-void TRestGeant4Event::SetTrackSubEventID(Int_t n, Int_t id) {
-    fTrack[n].SetSubEventID(id);
-    if (fMaxSubEventID < id) fMaxSubEventID = id;
-}
-
-void TRestGeant4Event::AddTrack(TRestGeant4Track trk) {
-    fTrack.push_back(trk);
-    fNTracks = fTrack.size();
-    fTotalDepositedEnergy += trk.GetTotalDepositedEnergy();
-    for (int n = 0; n < GetNumberOfActiveVolumes(); n++)
-        fVolumeDepositedEnergy[n] += trk.GetEnergyInVolume(n);
-}
-
 Double_t TRestGeant4Event::GetTotalDepositedEnergyFromTracks() {
     Double_t eDep = 0;
 
-    for (int tk = 0; tk < GetNumberOfTracks(); tk++) eDep += GetTrack(tk)->GetTotalDepositedEnergy();
+    // for (int tk = 0; tk < GetNumberOfTracks(); tk++) eDep += GetTrack(tk)->GetTotalDepositedEnergy();
 
     return eDep;
 }
@@ -212,15 +165,64 @@ TVector3 TRestGeant4Event::GetLastPositionInVolume(Int_t volID) {
 
     TVector3 pos;
     Double_t nan = TMath::QuietNaN();
-    return TVector3(nan, nan, nan);
+    return {nan, nan, nan};
 }
 
 TRestGeant4Track* TRestGeant4Event::GetTrackByID(int id) {
-    for (int i = 0; i < fNTracks; i++)
-        if (fTrack[i].GetTrackID() == id) return &fTrack[i];
-    return NULL;
+    for (int i = 0; i < GetNumberOfTracks(); i++) {
+        if (fTracks[i].GetTrackID() == id) return (TRestGeant4Track*)&fTracks[i];
+    }
+    return nullptr;
 }
 
+TRestHits TRestGeant4Event::GetHits() {
+    TRestHits output;
+    for (auto& track : fTracks) {
+        auto hits = track.GetHits();
+        for (int i = 0; i < hits->GetNumberOfHits(); i++) {
+            output.AddHit(reinterpret_cast<TRestHits&>(hits), i);
+        }
+    }
+
+    return output;
+}
+
+TRestHits TRestGeant4Event::GetHitsInVolume(const TString& volumeName) {
+    TRestHits output;
+    for (auto& track : fTracks) {
+        auto hits = track.GetHits();
+        for (int i = 0; i < hits->GetNumberOfHits(); i++) {
+            if (!hits->GetVolumeName(i).EqualTo(volumeName)) {
+                continue;
+            }
+            output.AddHit(reinterpret_cast<TRestHits&>(hits), i);
+        }
+    }
+
+    return output;
+}
+
+Int_t TRestGeant4Event::GetNumberOfTracksForParticle(const TString& particleName) {
+    Int_t count = 0;
+    for (const auto& track : fTracks) {
+        if (track.GetParticleName().EqualTo(particleName)) {
+            count += 1;
+        }
+    }
+    return count;
+}
+
+Float_t TRestGeant4Event::GetEnergyDepositedByParticle(const TString& particleName) {
+    Float_t energy = 0;
+    for (auto& track : fTracks) {
+        if (track.GetParticleName().EqualTo(particleName)) {
+            energy += track.GetEnergy();
+        }
+    }
+    return energy;
+}
+
+/*
 ///////////////////////////////////////////////
 /// \brief Function that returns the total number of hits in the Geant4 event. If
 /// a specific volume is given as argument only the hits of that specific volume
@@ -233,7 +235,8 @@ Int_t TRestGeant4Event::GetNumberOfHits(Int_t volID) {
     }
     return hits;
 }
-
+*/
+/*
 ///////////////////////////////////////////////
 /// \brief Function that returns all the hit depositions in the Geant4 event. If
 /// a specific volume is given as argument only the hits of that specific volume
@@ -244,7 +247,7 @@ TRestHits TRestGeant4Event::GetHits(Int_t volID) {
     for (int t = 0; t < fNTracks; t++) {
         TRestGeant4Hits* g4Hits = GetTrack(t)->GetHits();
         for (int n = 0; n < g4Hits->GetNumberOfHits(); n++) {
-            if (volID != -1 && g4Hits->GetVolumeId(n) != volID) continue;
+            if (volID != -1 && g4Hits->GetVolumeID(n) != volID) continue;
 
             Double_t x = g4Hits->GetX(n);
             Double_t y = g4Hits->GetY(n);
@@ -257,7 +260,9 @@ TRestHits TRestGeant4Event::GetHits(Int_t volID) {
 
     return hits;
 }
+*/
 
+/*
 Int_t TRestGeant4Event::GetNumberOfTracksForParticle(TString parName) {
     Int_t tcks = 0;
     for (Int_t t = 0; t < GetNumberOfTracks(); t++)
@@ -265,7 +270,9 @@ Int_t TRestGeant4Event::GetNumberOfTracksForParticle(TString parName) {
 
     return tcks;
 }
+*/
 
+/*
 Int_t TRestGeant4Event::GetEnergyDepositedByParticle(TString parName) {
     Double_t en = 0;
     for (Int_t t = 0; t < GetNumberOfTracks(); t++) {
@@ -274,6 +281,7 @@ Int_t TRestGeant4Event::GetEnergyDepositedByParticle(TString parName) {
 
     return en;
 }
+ */
 
 void TRestGeant4Event::SetBoundaries(Double_t xMin, Double_t xMax, Double_t yMin, Double_t yMax,
                                      Double_t zMin, Double_t zMax) {
@@ -334,7 +342,7 @@ void TRestGeant4Event::SetBoundaries() {
     fTotalHits = nTHits;
 }
 
-/* {{{ Get{XY,YZ,XZ}MultiGraph methods */
+/* Get{XY,YZ,XZ}MultiGraph methods */
 TMultiGraph* TRestGeant4Event::GetXYMultiGraph(Int_t gridElement, std::vector<TString> pcsList,
                                                Double_t minPointSize, Double_t maxPointSize) {
     if (fXYHitGraph) {
@@ -362,7 +370,7 @@ TMultiGraph* TRestGeant4Event::GetXYMultiGraph(Int_t gridElement, std::vector<TS
         n = maxPointSize - m * fMaxEnergy;
     }
 
-    for (unsigned int n = 0; n < fXYPcsMarker.size(); n++) delete fXYPcsMarker[n];
+    for (auto& n : fXYPcsMarker) delete n;
     fXYPcsMarker.clear();
 
     legendAdded.clear();
@@ -380,8 +388,8 @@ TMultiGraph* TRestGeant4Event::GetXYMultiGraph(Int_t gridElement, std::vector<TS
             Double_t energy = hits->GetEnergy(nhit);
 
             for (unsigned int p = 0; p < pcsList.size(); p++) {
-                if (GetTrack(ntck)->GetProcessName(hits->GetProcess(nhit)) == pcsList[p]) {
-                    TGraph* pcsGraph = new TGraph(1);
+                if (hits->GetProcessName(nhit) == pcsList[p]) {
+                    auto pcsGraph = new TGraph(1);
 
                     pcsGraph->SetPoint(0, xPos, yPos);
                     pcsGraph->SetMarkerColor(kBlack);
@@ -391,8 +399,7 @@ TMultiGraph* TRestGeant4Event::GetXYMultiGraph(Int_t gridElement, std::vector<TS
                     fXYPcsMarker.push_back(pcsGraph);
 
                     if (legendAdded[p] == 0) {
-                        fLegend_XY->AddEntry(pcsGraph, GetTrack(ntck)->GetProcessName(hits->GetProcess(nhit)),
-                                             "p");
+                        fLegend_XY->AddEntry(pcsGraph, hits->GetProcessName(nhit), "p");
                         legendAdded[p] = 1;
                     }
                 }
@@ -472,7 +479,7 @@ TMultiGraph* TRestGeant4Event::GetYZMultiGraph(Int_t gridElement, std::vector<TS
             Double_t energy = hits->GetEnergy(nhit);
 
             for (unsigned int p = 0; p < pcsList.size(); p++) {
-                if (GetTrack(ntck)->GetProcessName(hits->GetProcess(nhit)) == pcsList[p]) {
+                if (hits->GetProcessName(nhit) == pcsList[p]) {
                     TGraph* pcsGraph = new TGraph(1);
 
                     pcsGraph->SetPoint(0, yPos, zPos);
@@ -483,8 +490,7 @@ TMultiGraph* TRestGeant4Event::GetYZMultiGraph(Int_t gridElement, std::vector<TS
                     fYZPcsMarker.push_back(pcsGraph);
 
                     if (legendAdded[p] == 0) {
-                        fLegend_YZ->AddEntry(pcsGraph, GetTrack(ntck)->GetProcessName(hits->GetProcess(nhit)),
-                                             "p");
+                        fLegend_YZ->AddEntry(pcsGraph, hits->GetProcessName(nhit), "p");
                         legendAdded[p] = 1;
                     }
                 }
@@ -564,7 +570,7 @@ TMultiGraph* TRestGeant4Event::GetXZMultiGraph(Int_t gridElement, std::vector<TS
             Double_t energy = hits->GetEnergy(nhit);
 
             for (unsigned int p = 0; p < pcsList.size(); p++) {
-                if (GetTrack(ntck)->GetProcessName(hits->GetProcess(nhit)) == pcsList[p]) {
+                if (hits->GetProcessName(nhit) == pcsList[p]) {
                     TGraph* pcsGraph = new TGraph(1);
 
                     pcsGraph->SetPoint(0, xPos, zPos);
@@ -575,8 +581,7 @@ TMultiGraph* TRestGeant4Event::GetXZMultiGraph(Int_t gridElement, std::vector<TS
                     fXZPcsMarker.push_back(pcsGraph);
 
                     if (legendAdded[p] == 0) {
-                        fLegend_XZ->AddEntry(pcsGraph, GetTrack(ntck)->GetProcessName(hits->GetProcess(nhit)),
-                                             "p");
+                        fLegend_XZ->AddEntry(pcsGraph, hits->GetProcessName(nhit), "p");
                         legendAdded[p] = 1;
                     }
                 }
@@ -1047,6 +1052,7 @@ TPad* TRestGeant4Event::DrawEvent(TString option, Bool_t autoBoundaries) {
 
     return fPad;
 }
+/*
 void TRestGeant4Event::PrintActiveVolumes() {
     cout << "Number of active volumes : " << GetNumberOfActiveVolumes() << endl;
     for (int i = 0; i < fVolumeStoredNames.size(); i++) {
@@ -1058,6 +1064,9 @@ void TRestGeant4Event::PrintActiveVolumes() {
             cout << "Active volume " << i << ":" << fVolumeStoredNames[i] << " has not been stored" << endl;
     }
 }
+ */
+
+/*
 void TRestGeant4Event::PrintEvent(int maxTracks, int maxHits) {
     TRestEvent::PrintEvent();
 
@@ -1101,3 +1110,4 @@ void TRestGeant4Event::PrintEvent(int maxTracks, int maxHits) {
 
     for (int n = 0; n < ntracks; n++) GetTrack(n)->PrintTrack(maxHits);
 }
+*/

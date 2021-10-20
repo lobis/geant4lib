@@ -18,10 +18,9 @@ class G4Step;
 class TRestGeant4Event;
 
 class TRestGeant4DataEvent : public TRestEvent {
-   private:
+   protected:
     void Initialize() override {}
 
-   protected:
     Int_t fRunOrigin{};
 
     Int_t fRunID{};
@@ -30,15 +29,15 @@ class TRestGeant4DataEvent : public TRestEvent {
 
     Float_t fSensitiveVolumeEnergy{};
 
-    TString fPrimaryParticleName = "";
-    Float_t fPrimaryEnergy{};
-    TVector3 fPrimaryPosition{};
-    TVector3 fPrimaryMomentum{};
+    std::vector<TString> fPrimaryParticleName;
+    std::vector<Float_t> fPrimaryEnergy;
+    std::vector<TVector3> fPrimaryPosition;
+    std::vector<TVector3> fPrimaryDirection;
 
     TString fSubEventPrimaryParticleName = "";
     Float_t fSubEventPrimaryEnergy{};
     TVector3 fSubEventPrimaryPosition{};
-    TVector3 fSubEventPrimaryMomentum{};
+    TVector3 fSubEventPrimaryDirection{};
 
     std::vector<TRestGeant4DataTrack> fTracks{};
 
@@ -57,7 +56,24 @@ class TRestGeant4DataEvent : public TRestEvent {
     inline void SetSubEventID(Int_t subEventID) { fSubEventID = subEventID; }
     inline Float_t GetSensitiveVolumeEnergy() const { return fSensitiveVolumeEnergy; }
     inline void AddSensitiveVolumeEnergy(Float_t energy) { fSensitiveVolumeEnergy += energy; }
-    operator TRestGeant4Event() const;
+    // operator TRestGeant4Event() const;
+
+    Bool_t IsEmpty() const { return fTracks.empty(); }
+
+   private:
+    TRestGeant4DataSteps fInitialStep;  //!
+
+    ClassDef(TRestGeant4DataEvent, 2);
+
+   public:
+    // from TRestGeant4Event
+    inline TVector3 GetPrimaryEventOrigin() { return fPrimaryPosition[0]; }
+
+    inline size_t GetNumberOfPrimaries() const { return fPrimaryParticleName.size(); }
+    inline TString GetPrimaryEventParticleName(Int_t n = 0) const { return fPrimaryParticleName[n]; }
+    inline TVector3 GetPrimaryEventPosition(Int_t n = 0) const { return fPrimaryPosition[n]; }
+    inline TVector3 GetPrimaryEventDirection(Int_t n = 0) const { return fPrimaryDirection[n]; }
+    inline Double_t GetPrimaryEventEnergy(Int_t n = 0) { return fPrimaryEnergy[n]; }
 
     inline size_t GetNumberOfTracks() const { return fTracks.size(); }
     inline size_t GetNumberOfSteps() const {
@@ -67,13 +83,7 @@ class TRestGeant4DataEvent : public TRestEvent {
         }
         return n;
     }
-
-    Bool_t IsEmpty() const { return fTracks.empty(); }
-
-   private:
-    TRestGeant4DataSteps fInitialStep;  //!
-
-    ClassDef(TRestGeant4DataEvent, 2);
+    inline size_t GetNumberOfHits() const { return GetNumberOfSteps(); }
 };
 
 #endif  // REST_TRESTGEANT4DATAEVENT_H

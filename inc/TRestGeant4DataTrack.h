@@ -31,7 +31,7 @@ class TRestGeant4DataTrack {
     Float_t fTrackLength{};
 
     Float_t fWeight{};
-    TRestGeant4DataSteps fSteps;
+    TRestGeant4DataSteps fHits;
 
    public:
     inline TRestGeant4DataTrack() = default;
@@ -45,9 +45,27 @@ class TRestGeant4DataTrack {
 
     operator TRestGeant4Track() const;
 
-    inline void UpdateSteps(const TRestGeant4DataSteps& steps) { fSteps = steps; }  //!
+    inline void UpdateSteps(const TRestGeant4DataSteps& steps) { fHits = steps; }  //!
 
-    inline size_t GetNumberOfSteps() const { return fSteps.GetNumberOfSteps(); }
+    inline size_t GetNumberOfSteps() const { return fHits.GetNumberOfSteps(); }
+
+    inline TString GetParticleName() const { return fParticleName; }
+    inline TString GetParticleType() const { return fParticleType; }
+    inline TString GetParticleSubType() const { return fParticleSubType; }
+    inline TString GetCreatorProcess() const { return fCreatorProcess; }
+
+    inline Int_t GetTrackID() const { return fTrackID; }
+    inline Int_t GetParentID() const { return fParentID; }
+
+    inline Float_t GetTrackLength() const { return fTrackLength; }
+
+    inline Int_t GetNumberOfSecondaries() const { return fNumberOfSecondaries; }
+    inline Float_t GetKineticEnergy() const { return fInitialKineticEnergy; }
+
+    inline Float_t GetInitialTime() const { return fHits.GetTime(0); }
+    inline Float_t GetTrackTimeLength() const {
+        return fHits.GetTime(fHits.GetNumberOfSteps() - 1) - fHits.GetTime(0);
+    }
 
     ClassDef(TRestGeant4DataTrack, 1);
 };

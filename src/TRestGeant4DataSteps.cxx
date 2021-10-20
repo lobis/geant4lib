@@ -7,8 +7,8 @@
 #include "spdlog/spdlog.h"
 
 void TRestGeant4DataSteps::Print() const {
-    spdlog::warn("Step information - #steps: {}", fN);
-    for (int i = 0; i < fN; i++) {
+    spdlog::warn("Step information - #steps: {}", fNHits);
+    for (int i = 0; i < fNHits; i++) {
         spdlog::warn(
             "\tStep ID {} - process {} - energy deposited {:0.2f} keV - volume {}{} - position "
             "(mm) ({:03.2f}, {:03.2f}, {:03.2f})",                           //

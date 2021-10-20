@@ -21,129 +21,9 @@ using namespace std;
 
 ClassImp(TRestGeant4Track);
 
-TRestGeant4Track::TRestGeant4Track() {
-    // TRestGeant4Track default constructor
-}
+TRestGeant4Track::TRestGeant4Track() = default;
 
-TRestGeant4Track::~TRestGeant4Track() {
-    // TRestGeant4Track destructor
-}
-
-Int_t TRestGeant4Track::GetProcessID(TString pcsName) {
-    Int_t id = -1;
-
-    // TODO We register the process manually. Not good if we add new processes to
-    // the physics list There must be a way to get all the registered processes
-    // from the physics list. Would be a better way to do it Or at least we must
-    // make a mapping id number to processName on a header file
-    if (pcsName == "initStep")
-        id = 0;
-    else if (pcsName == "Transportation")
-        id = 1;
-    else if (pcsName == "ionIoni")
-        id = 2;
-    else if (pcsName == "phot")
-        id = 3;
-    else if (pcsName == "eIoni")
-        id = 4;
-    else if (pcsName == "eBrem")
-        id = 5;
-    else if (pcsName == "msc")
-        id = 6;
-    else if (pcsName == "compt")
-        id = 7;
-    else if (pcsName == "Rayl")
-        id = 8;
-    else if (pcsName == "conv")
-        id = 9;
-    else if (pcsName == "annihil")
-        id = 10;
-    else if (pcsName == "RadioactiveDecay")
-        id = 11;
-    else if (pcsName == "muIoni")
-        id = 12;
-    else if (pcsName == "e-Step")
-        id = 20;
-    else if (pcsName == "e+Step")
-        id = 21;
-    else if (pcsName == "ionStep")
-        id = 22;
-    // else if ( pcsName == "alphaStep") id = 23;
-    // else if ( pcsName == "He3Step") id = 24;
-    else if (pcsName == "muBrems")
-        id = 30;
-    else if (pcsName == "muPairProd")
-        id = 31;
-    else if (pcsName == "Decay")
-        id = 32;
-    else if (pcsName == "hIoni")
-        id = 33;
-    else if (pcsName == "hBrems")
-        id = 34;
-    else if (pcsName == "hPairProd")
-        id = 35;
-    else if (pcsName == "hadElastic")
-        id = 36;
-    else if (pcsName == "neutronInelastic")
-        id = 37;
-    else if (pcsName == "nCapture")
-        id = 38;
-    else if (pcsName == "nKiller")
-        id = 39;
-    else if (pcsName == "nuclearStopping")
-        id = 40;
-    else if (pcsName == "CoulombScat")
-        id = 41;
-    else if (pcsName == "photonNuclear")
-        id = 42;
-    else if (pcsName == "protonInelastic")
-        id = 43;
-    else if (pcsName == "pi-Inelastic")
-        id = 44;
-    else if (pcsName == "pi+Inelastic")
-        id = 45;
-    else if (pcsName == "tInelastic")
-        id = 46;
-    else if (pcsName == "dInelastic")
-        id = 47;
-    else if (pcsName == "electronNuclear")
-        id = 48;
-    else if (pcsName == "muonNuclear")
-        id = 49;
-    else if (pcsName == "positronNuclear")
-        id = 50;
-    else if (pcsName == "mu-Step")
-        id = 51;
-    else if (pcsName == "mu+Step")
-        id = 52;
-    else if (pcsName == "ePairProd")
-        id = 53;
-    else if (pcsName == "alphaInelastic")
-        id = 54;
-    else if (pcsName == "H3Inelastic")
-        id = 55;
-    else if (pcsName == "He3Inelastic")
-        id = 56;
-    else if (pcsName == "kaon+Inelastic")
-        id = 57;
-    else if (pcsName == "kaon-Inelastic")
-        id = 58;
-    else if (pcsName == "kaon0LInelastic")
-        id = 59;
-    else if (pcsName == "kaon0SInelastic")
-        id = 60;
-    else if (pcsName == "lambdaInelastic")
-        id = 61;
-    else if (pcsName == "nFission")
-        id = 70;
-    else {
-        id = -1;
-        cout << "WARNING : The process " << pcsName
-             << " was not found. It must be added to TRestGeant4Track::GetProcessID()" << endl;
-    }
-
-    return id;
-}
+TRestGeant4Track::~TRestGeant4Track() = default;
 
 EColor TRestGeant4Track::GetParticleColor() {
     EColor color = kGray;
@@ -170,29 +50,18 @@ EColor TRestGeant4Track::GetParticleColor() {
 /// \brief Function that returns the number of hit depositions found inside
 /// the TRestGeant4Track. If a specific volume id is given as argument only
 /// the hits of that specific volume will be counted.
-///
+/*
 Int_t TRestGeant4Track::GetNumberOfHits(Int_t volID) {
     Int_t hits = 0;
     for (int n = 0; n < fHits.GetNumberOfHits(); n++) {
-        if (volID != -1 && fHits.GetVolumeId(n) != volID) continue;
+        if (volID != -1 && fHits.GetVolumeID(n) != volID) continue;
         hits++;
     }
     return hits;
 }
+*/
 
-Double_t TRestGeant4Track::GetTrackLength() {
-    Double_t length = 0;
-
-    length = GetDistance(fHits.GetPosition(0), GetTrackOrigin());
-
-    for (int i = 1; i < GetNumberOfHits(); i++) {
-        TVector3 prevHit = fHits.GetPosition(i - 1);
-        TVector3 hit = fHits.GetPosition(i);
-        length += GetDistance(hit, prevHit);
-    }
-    return length;
-}
-
+/*
 TString TRestGeant4Track::GetProcessName(Int_t id) {
     if (id == 0)
         return "initStep";
@@ -300,7 +169,9 @@ TString TRestGeant4Track::GetProcessName(Int_t id) {
 
     return "";
 }
+*/
 
+/*
 void TRestGeant4Track::PrintTrack(int maxHits) {
     cout << "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
             "++++++++++++"
@@ -335,3 +206,4 @@ void TRestGeant4Track::PrintTrack(int maxHits) {
     cout << endl;
     cout.precision(2);
 }
+*/

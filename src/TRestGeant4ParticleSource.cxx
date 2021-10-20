@@ -288,7 +288,7 @@ bool TRestGeant4ParticleSource::ReadOldDecay0File(TString fileName) {
     int fGeneratorEvents;
     infile >> tmpInt >> fGeneratorEvents;
 
-    // cout << "i : " << tmpInt << " fN : " << fGeneratorEvents << endl;
+    // cout << "i : " << tmpInt << " fNHits : " << fGeneratorEvents << endl;
     // TRestGeant4ParticleSource* src = TRestGeant4ParticleSource::instantiate();
     // this->SetGenFilename(fileName);
     // this->SetAngularDistType("flux");

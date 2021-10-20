@@ -11,6 +11,10 @@
 ///                 Created as part of the conceptualization of existing REST
 ///                 software.
 ///                 J. Galan
+///
+///             oct 2021:   First concept
+///                 Updated to new datamodel
+///                 L. Obis
 ///_______________________________________________________________________________
 
 #ifndef RestCore_TRestGeant4Track
@@ -25,88 +29,35 @@
 #include <iostream>
 #include <vector>
 
-#include "TObject.h"
+#include "TRestGeant4DataTrack.h"
 
-// Perhaps there might be need for a mother class TRestTrack (if there is future
-// need)
-class TRestGeant4Track : public TObject {
+class TRestGeant4Track : public TRestGeant4DataTrack {
    protected:
-    Int_t fTrack_ID;
-    Int_t fParent_ID;
-
-    Int_t fSubEventId;
-
-    // We must change this to save space! (Might be not needed afterall)
-    // Int_t fParticle_ID;
-    TString fParticleName;
-
-    Double_t fGlobalTimestamp;  // in seconds precision
-    Double_t fTrackTimestamp;   // in ns precision (seconds have been removed)
-    Double_t fKineticEnergy;
-
     TRestGeant4Hits fHits;
 
-    TVector3 fTrackOrigin;
-
    public:
-    void Initialize() {
-        RemoveHits();
-        fSubEventId = 0.;
-    }
-
     TRestGeant4Hits* GetHits() { return &fHits; }
 
-    Double_t GetEnergy() { return GetHits()->GetEnergy(); }
+    Double_t GetEnergy() { return fHits.TRestHits::GetEnergy(); }
 
-    Int_t GetNumberOfHits(Int_t volID = -1);
-    Int_t GetTrackID() { return fTrack_ID; }
-    Int_t GetParentID() { return fParent_ID; }
-
-    TString GetParticleName() { return fParticleName; }
     EColor GetParticleColor();
 
-    Double_t GetGlobalTime() { return fGlobalTimestamp; }
-    Double_t GetTrackTimeLength() { return fTrackTimestamp; }
-    Double_t GetKineticEnergy() { return fKineticEnergy; }
-    Double_t GetTotalDepositedEnergy() { return fHits.GetTotalDepositedEnergy(); }
-    TVector3 GetTrackOrigin() { return fTrackOrigin; }
-    Int_t GetSubEventID() { return fSubEventId; }
-
-    Double_t GetEnergyInVolume(Int_t volID) { return GetHits()->GetEnergyInVolume(volID); }
-    TVector3 GetMeanPositionInVolume(Int_t volID) { return GetHits()->GetMeanPositionInVolume(volID); }
-    TVector3 GetFirstPositionInVolume(Int_t volID) { return GetHits()->GetFirstPositionInVolume(volID); }
-    TVector3 GetLastPositionInVolume(Int_t volID) { return GetHits()->GetLastPositionInVolume(volID); }
-
-    void SetSubEventID(Int_t id) { fSubEventId = id; }
-
-    void SetTrackID(Int_t id) { fTrack_ID = id; }
-    void SetParentID(Int_t id) { fParent_ID = id; }
-    //       void SetParticleID( Int_t id ) { fParticle_ID = id; }
-    void SetParticleName(TString ptcleName) { fParticleName = ptcleName; }
-    void SetGlobalTrackTime(Double_t time) { fGlobalTimestamp = time; }
-    void SetTrackTimeLength(Double_t time) { fTrackTimestamp = time; }
-    void SetKineticEnergy(Double_t en) { fKineticEnergy = en; }
-    void SetTrackOrigin(TVector3 pos) { fTrackOrigin = pos; }
-    void SetTrackOrigin(Double_t x, Double_t y, Double_t z) { fTrackOrigin.SetXYZ(x, y, z); }
-
-    void AddG4Hit(TVector3 pos, Double_t en, Double_t hit_global_time, Int_t pcs, Int_t vol, Double_t eKin,
-                  TVector3 momentumDirection) {
-        fHits.AddG4Hit(pos, en, hit_global_time, pcs, vol, eKin, momentumDirection);
+    inline TVector3 GetTrackOrigin() const {
+        if (fHits.GetProcessName(0) != "Init") {
+            std::cout << "ERROR IN TRestGeant4Track::GetTrackOrigin, please check" << std::endl;
+            exit(1);
+        }
+        return fHits.TRestHits::GetPosition(0);
     }
 
-    Double_t GetTrackLength();
+    Double_t GetEnergyInVolume(Int_t volID) { return fHits.GetEnergyInVolume(volID); }
+    TVector3 GetMeanPositionInVolume(Int_t volID) { return fHits.GetMeanPositionInVolume(volID); }
+    TVector3 GetFirstPositionInVolume(Int_t volID) { return fHits.GetFirstPositionInVolume(volID); }
+    TVector3 GetLastPositionInVolume(Int_t volID) { return fHits.GetLastPositionInVolume(volID); }
 
-    Double_t GetDistance(TVector3 v1, TVector3 v2) {
-        return TMath::Sqrt((v1.X() - v2.X()) * (v1.X() - v2.X()) + (v1.Y() - v2.Y()) * (v1.Y() - v2.Y()) +
-                           (v1.Z() - v2.Z()) * (v1.Z() - v2.Z()));
-    }
+    Int_t GetNumberOfHits() const { return fHits.GetNumberOfSteps(); }
 
-    void RemoveHits() { fHits.RemoveHits(); }
-
-    // TODO move this to a namespace header??
-    Int_t GetProcessID(TString pcsName);
-    TString GetProcessName(Int_t id);
-
+    /*
     Bool_t isRadiactiveDecay() {
         for (int n = 0; n < GetHits()->GetNumberOfHits(); n++)
             if (GetHits()->GetHitProcess(n) == 11) return true;
@@ -236,20 +187,18 @@ class TRestGeant4Track : public TObject {
             if ((GetHits()->GetHitVolume(n) == volID) && (GetParticleName().Contains("Xe"))) return true;
         return false;
     }
+     */
     /////////////////////////////////
 
     /// Prints the track information. N number of hits to print, 0 = all
     void PrintTrack(int maxHits = 0);
 
-    //    Int_t GetElement( Int_t n ) { return X.At(n); }
-
-    //    Int_t GetParticleID();
-    // Construtor
+    // Constructor
     TRestGeant4Track();
     // Destructor
-    virtual ~TRestGeant4Track();
+    ~TRestGeant4Track();
 
-    ClassDef(TRestGeant4Track, 2);  // REST event superclass
+    ClassDef(TRestGeant4Track, 3);  // REST event superclass
 };
 
 #endif

@@ -1376,7 +1376,7 @@ void TRestGeant4Metadata::PrintGeometryInfo() const {
 //    int fGeneratorEvents;
 //    infile >> tmpInt >> fGeneratorEvents;
 //
-//     // cout << "i : " << tmpInt << " fN : " << fGeneratorEvents << endl;
+//     // cout << "i : " << tmpInt << " fNHits : " << fGeneratorEvents << endl;
 //     TRestGeant4ParticleSource* src = TRestGeant4ParticleSource::instantiate();
 //     src->SetGenFilename(fileName);
 //     // src->SetAngularDistType("flux");

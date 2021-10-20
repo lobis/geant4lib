@@ -37,21 +37,23 @@
 #include <iostream>
 #include <map>
 
+#include "TRestGeant4DataEvent.h"
+
 /// An event class to store geant4 generated event information
-class TRestGeant4Event : public TRestEvent {
+
+class TRestGeant4Event : public TRestGeant4DataEvent {
    private:
-#ifndef __CINT__
     Double_t fMinX, fMaxX;            //!
     Double_t fMinY, fMaxY;            //!
     Double_t fMinZ, fMaxZ;            //!
     Double_t fMinEnergy, fMaxEnergy;  //!
-#endif
-
-    void AddEnergyDepositToVolume(Int_t volID, Double_t eDep);
 
     Bool_t PerProcessEnergyInitFlag = false;
     std::map<string, Double_t> PerProcessEnergyInSensitive;
 
+    std::vector<TRestGeant4Track> fTracks;
+
+    /*
     void inline InitializePerProcessEnergyInSensitive() {
         PerProcessEnergyInitFlag = true;
         PerProcessEnergyInSensitive["photoelectric"] = 0;
@@ -81,7 +83,7 @@ class TRestGeant4Event : public TRestEvent {
             hits = track->GetHits();
 
             for (Int_t hit_id = 0; hit_id < hits->GetNumberOfHits(); hit_id++) {
-                if (hits->GetVolumeId(hit_id) != 0) {
+                if (hits->GetVolumeID(hit_id) != 0) {
                     continue;
                 }
 
@@ -121,10 +123,9 @@ class TRestGeant4Event : public TRestEvent {
             }
         }
     }
+    */
 
    protected:
-#ifndef __CINT__
-
     // TODO These graphs should be placed in TRestTrack?
     // (following GetGraph implementation in TRestDetectorSignal)
     TGraph* fXZHitGraph;  //!
@@ -171,66 +172,58 @@ class TRestGeant4Event : public TRestEvent {
     TH1D* GetXHistogram(Int_t gridElement, std::vector<TString> optList);
     TH1D* GetYHistogram(Int_t gridElement, std::vector<TString> optList);
     TH1D* GetZHistogram(Int_t gridElement, std::vector<TString> optList);
-#endif
 
     TVector3 fPrimaryEventOrigin;
 
+    /*
     std::vector<TString> fPrimaryParticleName;
     std::vector<TVector3> fPrimaryEventDirection;
     std::vector<Double_t> fPrimaryEventEnergy;
+    */
 
     Double_t fTotalDepositedEnergy;
-    Double_t fSensitiveVolumeEnergy;
 
+    /*
     Int_t fNVolumes;
     std::vector<Int_t> fVolumeStored;
     std::vector<string> fVolumeStoredNames;
     std::vector<Double_t> fVolumeDepositedEnergy;
-
-    Int_t fNTracks;
-    std::vector<TRestGeant4Track> fTrack;
+    */
 
     Int_t fMaxSubEventID;
+
+    std::map<TString, Float_t> fEnergyDepositedInVolumeMap{};
 
    public:
     void SetBoundaries();
     void SetBoundaries(Double_t xMin, Double_t xMax, Double_t yMin, Double_t yMax, Double_t zMin,
                        Double_t zMax);
 
-    TString GetPrimaryEventParticleName(int n) {
-        if (fPrimaryParticleName.size() > n) return fPrimaryParticleName[n];
-        return "Not defined";
-    }
-
-    TVector3 GetPrimaryEventDirection(Int_t n = 0) { return fPrimaryEventDirection[n]; }
-    TVector3 GetPrimaryEventOrigin() { return fPrimaryEventOrigin; }
-    Double_t GetPrimaryEventEnergy(Int_t n = 0) { return fPrimaryEventEnergy[n]; }
-
-    Int_t GetNumberOfHits(Int_t volID = -1);
-    Int_t GetNumberOfTracks() const { return fNTracks; }
-    Int_t GetNumberOfPrimaries() { return fPrimaryEventDirection.size(); }
-    Int_t GetNumberOfActiveVolumes() const { return fNVolumes; }
-
-    Int_t isVolumeStored(int n) { return fVolumeStored[n]; }
-    TRestGeant4Track* GetTrack(int n) { return &fTrack[n]; }
+    //    Int_t isVolumeStored(int n) { return fVolumeStored[n]; }
+    TRestGeant4Track* GetTrack(int n) { return (TRestGeant4Track*)&fTracks[n]; }
     TRestGeant4Track* GetTrackByID(int id);
     Int_t GetNumberOfSubEventIDTracks() { return fMaxSubEventID + 1; }
 
     Double_t GetTotalDepositedEnergy() const { return fTotalDepositedEnergy; }
     Double_t GetTotalDepositedEnergyFromTracks();
-    Double_t GetEnergyDepositedInVolume(Int_t volID) { return fVolumeDepositedEnergy[volID]; }
+    Float_t GetEnergyDepositedInVolume(const TString& volumeName) const {
+        return fEnergyDepositedInVolumeMap.at(volumeName);
+    }
+
     Double_t GetSensitiveVolumeEnergy() const { return fSensitiveVolumeEnergy; }
+
     TVector3 GetMeanPositionInVolume(Int_t volID);
     TVector3 GetFirstPositionInVolume(Int_t volID);
     TVector3 GetLastPositionInVolume(Int_t volID);
     TVector3 GetPositionDeviationInVolume(Int_t volID);
 
-    TRestHits GetHits(Int_t volID = -1);
-    TRestHits GetHitsInVolume(Int_t volID) { return GetHits(volID); }
+    TRestHits GetHits();
+    TRestHits GetHitsInVolume(const TString& volumeName);
 
-    Int_t GetNumberOfTracksForParticle(TString parName);
-    Int_t GetEnergyDepositedByParticle(TString parName);
+    Int_t GetNumberOfTracksForParticle(const TString& particleName);
+    Float_t GetEnergyDepositedByParticle(const TString& particleName);
 
+    /*
     Double_t GetEnergyInSensitiveFromProcessPhoto() {
         if (!PerProcessEnergyInitFlag) {
             InitializePerProcessEnergyInSensitive();
@@ -291,26 +284,13 @@ class TRestGeant4Event : public TRestEvent {
         }
         return PerProcessEnergyInSensitive["neutron_elastic"];
     }
-
-    void SetPrimaryEventOrigin(const TVector3& pos) { fPrimaryEventOrigin = pos; }
-    void SetPrimaryEventDirection(const TVector3& dir) { fPrimaryEventDirection.push_back(dir); }
-    void SetPrimaryEventParticleName(const TString& pName) { fPrimaryParticleName.push_back(pName); }
-    void SetPrimaryEventEnergy(Double_t en) { fPrimaryEventEnergy.push_back(en); }
-    void ActivateVolumeForStorage(Int_t n) { fVolumeStored[n] = 1; }
-    void DisableVolumeForStorage(Int_t n) { fVolumeStored[n] = 0; }
-
-    void AddActiveVolume(const string& volumeName);
-    void ClearVolumes();
-    void AddEnergyToSensitiveVolume(Double_t en) { fSensitiveVolumeEnergy += en; }
-
-    void SetEnergyDepositedInVolume(Int_t volID, Double_t eDep) { fVolumeDepositedEnergy[volID] = eDep; }
-    void SetSensitiveVolumeEnergy(Double_t en) { fSensitiveVolumeEnergy = en; }
+    */
 
     Int_t GetLowestTrackID() {
         Int_t lowestID = 0;
-        if (fNTracks > 0) lowestID = GetTrack(0)->GetTrackID();
+        if (GetNumberOfTracks() > 0) lowestID = GetTrack(0)->GetTrackID();
 
-        for (int i = 0; i < fNTracks; i++) {
+        for (int i = 0; i < GetNumberOfTracks(); i++) {
             TRestGeant4Track* tr = GetTrack(i);
             if (tr->GetTrackID() < lowestID) lowestID = tr->GetTrackID();
         }
@@ -318,9 +298,7 @@ class TRestGeant4Event : public TRestEvent {
         return lowestID;
     }
 
-    void SetTrackSubEventID(Int_t n, Int_t id);
-    void AddTrack(TRestGeant4Track trk);
-
+    /*
     Bool_t isRadiactiveDecay() {
         for (int n = 0; n < GetNumberOfTracks(); n++)
             if (GetTrack(n)->isRadiactiveDecay()) return true;
@@ -401,8 +379,9 @@ class TRestGeant4Event : public TRestEvent {
             if ((GetTrack(n)->GetParticleName()).Contains("Ne")) return true;
         return false;
     }
+     */
     /// Processes and particles in a given volume
-
+    /*
     Bool_t isRadiactiveDecayInVolume(Int_t volID) {
         for (int n = 0; n < GetNumberOfTracks(); n++)
             if (GetTrack(n)->isRadiactiveDecayInVolume(volID)) return true;
@@ -482,12 +461,13 @@ class TRestGeant4Event : public TRestEvent {
             if (GetTrack(n)->isNeonInVolume(volID)) return true;
         return false;
     }
+    */
 
     void Initialize();
 
     /// maxTracks : number of tracks to print, 0 = all
     void PrintActiveVolumes();
-    void PrintEvent(int maxTracks = 0, int maxHits = 0);
+    // void PrintEvent(int maxTracks = 0, int maxHits = 0);
 
     TPad* DrawEvent(TString option = "") { return DrawEvent(option, true); }
     TPad* DrawEvent(TString option, Bool_t autoBoundaries);
@@ -497,6 +477,6 @@ class TRestGeant4Event : public TRestEvent {
     // Destructor
     ~TRestGeant4Event() override;
 
-    ClassDef(TRestGeant4Event, 6);  // REST event superclass
+    ClassDef(TRestGeant4Event, 7);  // REST event superclass
 };
 #endif
