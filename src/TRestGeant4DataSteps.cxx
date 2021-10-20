@@ -14,7 +14,7 @@ void TRestGeant4DataSteps::Print() const {
             "(mm) ({:03.2f}, {:03.2f}, {:03.2f})",                           //
             fStepID[i], fProcessName[i], fEnergy[i], fVolumeName[i],         //
             (fVolumeNamePost[i].IsNull() ? "" : "->" + fVolumeNamePost[i]),  //
-            fPosition[i].x(), fPosition[i].y(), fPosition[i].z()             //
+            fX[i], fY[i], fZ[i]                                              //
         );
     }
 }

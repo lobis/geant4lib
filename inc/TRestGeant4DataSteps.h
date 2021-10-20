@@ -52,7 +52,7 @@ class TRestGeant4DataSteps : public TRestHits {
     // operator TRestGeant4Hits() const;
 
     inline Int_t GetNumberOfSteps() const { return fNHits; }
-    // GetPosition implemented in TRestHits
+    inline TVector3 GetPosition(size_t index) const { return {fX[index], fY[index], fZ[index]}; }
     inline TVector3 GetDirection(size_t index) const { return fMomentumDirection[index]; }
     inline Float_t GetEnergy(size_t index) const { return fEnergy[index]; }
     inline Float_t GetKineticEnergy(size_t index) const { return fKineticEnergy[index]; }
