@@ -12,7 +12,7 @@ TRestGeant4Hits::TRestGeant4Hits() : TRestHits() {}
 TRestGeant4Hits::~TRestGeant4Hits() = default;
 
 void TRestGeant4Hits::Print(size_t numberOfHitsToPrintLimit) const {
-    cout << TString::Format("---> Hit information - N hits: %d", fNHits) << endl;
+    cout << TString::Format("---> ---> Hit information - N hits: %d", fNHits) << endl;
     for (int i = 0; i < fNHits; i++) {
         if (numberOfHitsToPrintLimit > 0 && i >= numberOfHitsToPrintLimit) {
             cout << TString::Format("---> ---> Hit print limit of %zu reached (total hits: %d)",

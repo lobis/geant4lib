@@ -33,9 +33,9 @@ class TRestGeant4Event : public TRestEvent {
    protected:
     Int_t fRunOrigin;
 
-    Int_t fRunID;
-    Int_t fEventID;
-    Int_t fSubEventID;
+    Int_t fRunID; // Geant4 Run ID
+    //Int_t fEventID;
+    //Int_t fSubEventID;
 
     TVector3 fPrimaryEventOrigin;
 
