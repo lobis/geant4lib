@@ -14,7 +14,7 @@
 
 #include "TRestGeant4EventViewer.h"
 
-#include "TRestStringOutput.h"
+#include <TRestStringOutput.h>
 
 using namespace std;
 
@@ -22,9 +22,7 @@ ClassImp(TRestGeant4EventViewer);
 
 TRestGeant4EventViewer::TRestGeant4EventViewer() { Initialize(); }
 
-TRestGeant4EventViewer::~TRestGeant4EventViewer() {
-    // TRestGeant4EventViewer destructor
-}
+TRestGeant4EventViewer::~TRestGeant4EventViewer() = default;
 
 void TRestGeant4EventViewer::Initialize() {
     fG4Event = new TRestGeant4Event();
@@ -140,7 +138,7 @@ void TRestGeant4EventViewer::AddEvent(TRestEvent* ev) {
     Update();
 }
 
-void TRestGeant4EventViewer::AddText(TString text, TVector3 at) {
+void TRestGeant4EventViewer::AddText(const TString& text, const TVector3& at) {
     TEveText* evText = new TEveText(text);
     evText->SetName("Event title");
     evText->SetFontSize(12);
@@ -150,7 +148,7 @@ void TRestGeant4EventViewer::AddText(TString text, TVector3 at) {
     gEve->AddElement(evText);
 }
 
-void TRestGeant4EventViewer::AddMarker(Int_t trkID, TVector3 at, TString name) {
+void TRestGeant4EventViewer::AddMarker(Int_t trkID, const TVector3& at, const TString& name) {
     TEvePointSet* marker = new TEvePointSet(1);
     marker->SetName(name);
     marker->SetMarkerColor(kMagenta);

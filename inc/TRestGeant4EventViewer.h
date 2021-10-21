@@ -25,16 +25,16 @@ class TRestGeant4EventViewer : public TRestEveEventViewer {
     TRestGeant4Event* fG4Event;
 
    public:
-    void Initialize();
-    void DeleteCurrentEvent();
+    void Initialize() override;
+    void DeleteCurrentEvent() override;
     void AddEvent(TRestEvent* ev);
 
     void NextTrackVertex(Int_t trkID, TVector3 to);
     void AddTrack(Int_t trkID, Int_t parentID, TVector3 from, TString name);
     void AddParentTrack(Int_t trkID, TVector3 from, TString name);
 
-    void AddText(TString text, TVector3 at);
-    void AddMarker(Int_t trkID, TVector3 at, TString name);
+    void AddText(const TString& text, const TVector3& at);
+    void AddMarker(Int_t trkID, const TVector3& at, const TString& name);
 
     // Constructor
     TRestGeant4EventViewer();
