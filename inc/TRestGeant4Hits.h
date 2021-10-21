@@ -64,7 +64,7 @@ class TRestGeant4Hits : public TRestHits {
     // There are no setters! Geant4Lib Data Classes should be initialized in restG4 from Geant4 classes
 
    public:
-    void Print() const;
+    void Print(size_t numberOfHitsToPrintLimit = 0) const;
     // Advanced Getters (analysis)
     Float_t GetEnergyInVolume(const TString& volumeName) const;
     TVector3 GetMeanPositionInVolume(const TString& volumeName) const;

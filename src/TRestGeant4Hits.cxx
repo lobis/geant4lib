@@ -11,16 +11,23 @@ TRestGeant4Hits::TRestGeant4Hits() : TRestHits() {}
 
 TRestGeant4Hits::~TRestGeant4Hits() = default;
 
-void TRestGeant4Hits::Print() const {
-    cout << TString::Format("Step information - N steps: %d", fNHits) << endl;
+void TRestGeant4Hits::Print(size_t numberOfHitsToPrintLimit) const {
+    cout << TString::Format("---> Hit information - N hits: %d", fNHits) << endl;
     for (int i = 0; i < fNHits; i++) {
+        if (numberOfHitsToPrintLimit > 0 && i >= numberOfHitsToPrintLimit) {
+            cout << TString::Format("---> ---> Hit print limit of %zu reached (total hits: %d)",
+                                    numberOfHitsToPrintLimit, fNHits)
+                 << endl;
+            return;
+        }
         cout << TString::Format(
-            "---> ---> Step ID %d - process %s - energy deposited %.2f keV - volume %s%s - position "  //
-            "(mm) (%.2f, %.2f, %.2f)",                                                                 //
-            fID[i], fProcessName[i], fEnergy[i], fVolumeName[i],                                       //
-            (fVolumeNamePost[i].IsNull() ? "" : "->" + fVolumeNamePost[i]),                            //
-            fX[i], fY[i], fZ[i]                                                                        //
-        );
+                    "---> ---> Hit ID %d - process %s - energy deposited %.2f keV - volume %s%s - "
+                    "position (mm) (%.2f, %.2f, %.2f) - time: %.2f us",                              //
+                    fID[i], fProcessName[i].Data(), fEnergy[i], fVolumeName[i].Data(),               //
+                    (fVolumeNamePost[i].IsNull() ? "" : TString("->" + fVolumeNamePost[i]).Data()),  //
+                    fX[i], fY[i], fZ[i], fT[i]                                                       //
+                    )
+             << endl;
     }
 }
 

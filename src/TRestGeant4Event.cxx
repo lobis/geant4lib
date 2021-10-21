@@ -18,10 +18,11 @@
 #include "TRestGeant4Event.h"
 
 #include <TFrame.h>
+#include <TRestStringHelper.h>
+#include <TRestTools.h>
 #include <TStyle.h>
 
-#include "TRestStringHelper.h"
-#include "TRestTools.h"
+#include "spdlog/spdlog.h"
 
 using namespace std;
 
@@ -164,11 +165,28 @@ TVector3 TRestGeant4Event::GetLastPositionInVolume(const TString& volumeName) {
     return {nan, nan, nan};
 }
 
-TRestGeant4Track* TRestGeant4Event::GetTrackByID(int id) {
-    for (int i = 0; i < GetNumberOfTracks(); i++) {
-        if (fTracks[i].GetTrackID() == id) return (TRestGeant4Track*)&fTracks[i];
+TRestGeant4Track* TRestGeant4Event::GetTrackByID(int trackID) {
+    TRestGeant4Track* track = nullptr;
+    if (fTrackIDToIndex.count(trackID) != 0) {
+        track = &fTracks[fTrackIDToIndex.at(trackID)];
+    } else {
+        // find it and update index
+        for (int i = 0; i < GetNumberOfTracks(); i++) {
+            if (fTracks[i].GetTrackID() == trackID) {
+                track = &fTracks[i];
+                fTrackIDToIndex[trackID] = i;
+            }
+        }
     }
-    return nullptr;
+
+    if (track) {
+        // Check it is correct
+        if (trackID != track->GetTrackID()) {
+            spdlog::error("TRestGeant4Event::GetTrackByID - error with index, check!");
+        }
+    }
+
+    return track;
 }
 
 TRestHits TRestGeant4Event::GetHits() {
@@ -1070,25 +1088,25 @@ void TRestGeant4Event::PrintActiveVolumes() {
 }
  */
 
-/*
-void TRestGeant4Event::PrintEvent(int maxTracks, int maxHits) {
+void TRestGeant4Event::PrintEvent(size_t numberOfTracksToPrintLimit, size_t numberOfHitsToPrintLimit) {
     TRestEvent::PrintEvent();
 
-    cout.precision(4);
-
-    cout << "Total energy : " << fTotalDepositedEnergy << " keV" << endl;
-    cout << "Sensitive volume energy : " << fSensitiveVolumeEnergy << " keV" << endl;
-    cout << "Source origin : (" << fPrimaryEventOrigin.X() << "," << fPrimaryEventOrigin.Y() << ","
-         << fPrimaryEventOrigin.Z() << ") mm" << endl;
+    cout << TString::Format(
+                "Event information - tracks: %zu - hits: %zu - sensitive volume energy: %.2f keV - total "
+                "deposited energy: %.2f keV - source origin (%.2f, %.2f, %.2f) mm",
+                fTracks.size(), GetNumberOfHits(), fSensitiveVolumeEnergy, fTotalDepositedEnergy,
+                fPrimaryEventOrigin.x(), fPrimaryEventOrigin.y(), fPrimaryEventOrigin.z())
+         << endl;
 
     for (int n = 0; n < GetNumberOfPrimaries(); n++) {
-        TVector3* dir = &fPrimaryEventDirection[n];
-        cout << "Source " << n << " Particle name : " << GetPrimaryEventParticleName(n) << endl;
-        cout << "Source " << n << " direction : (" << dir->X() << "," << dir->Y() << "," << dir->Z() << ")"
+        cout << TString::Format("Source %d information:", n) << endl;
+        cout << TString::Format("---> Particle: %s - Direction: (%.2f, %.2f, %.2f) - Initial KE: %.2f keV",
+                                fPrimaryParticleName[n].Data(), fPrimaryDirection[n].x(),
+                                fPrimaryDirection[n].y(), fPrimaryDirection[n].z(), fPrimaryEnergy[n])
              << endl;
-        cout << "Source " << n << " energy : " << fPrimaryEventEnergy[n] << " keV" << endl;
     }
 
+    /*
     cout << "Number of active volumes : " << GetNumberOfActiveVolumes() << endl;
     for (int i = 0; i < GetNumberOfActiveVolumes(); i++) {
         if (isVolumeStored(i)) {
@@ -1101,17 +1119,14 @@ void TRestGeant4Event::PrintEvent(int maxTracks, int maxHits) {
                  << " has not been stored" << endl;
     }
 
-    cout << "--------------------------------------------------------------------"
-            "-------"
-         << endl;
-    cout << "Total number of tracks : " << fNTracks << endl;
-
-    int ntracks = GetNumberOfTracks();
-    if (maxTracks > 0) {
-        ntracks = min(maxTracks, GetNumberOfTracks());
-        cout << " Printing only the first " << ntracks << " tracks" << endl;
+     */
+    for (int i = 0; i < fTracks.size(); i++) {
+        if (numberOfTracksToPrintLimit > 0 && i >= numberOfTracksToPrintLimit) {
+            cout << TString::Format("---> ---> Track print limit of %zu reached (total tracks: %zu)",
+                                    numberOfTracksToPrintLimit, fTracks.size())
+                 << endl;
+            return;
+        }
+        fTracks[i].Print(numberOfHitsToPrintLimit);
     }
-
-    for (int n = 0; n < ntracks; n++) GetTrack(n)->PrintTrack(maxHits);
 }
-*/

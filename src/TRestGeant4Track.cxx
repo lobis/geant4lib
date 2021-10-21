@@ -33,4 +33,25 @@ EColor TRestGeant4Track::GetParticleColor() const {
     return color;
 }
 
-void TRestGeant4Track::PrintTrack(size_t numberOfHitsToPrintLimit) const { return; }
+void TRestGeant4Track::PrintTrack(size_t numberOfHitsToPrintLimit) const {
+    TString secondariesString;
+    if (!fSecondaryTrackIDs.empty()) {
+        secondariesString += "{";
+        for (const auto& trackID : fSecondaryTrackIDs) {
+            secondariesString += TString::Format("%d", trackID);
+            if (trackID != fSecondaryTrackIDs.back()) {
+                secondariesString += ", ";
+            }
+        }
+        secondariesString += "}";
+    }
+
+    cout << TString::Format(
+                "---> Track information - track ID: %d - Parent ID: %d - Particle: %s - Creator Process: %s "
+                "- Initial KE: %.2f keV - Length: %.2f mm - Time Span: %.2f us - Secondaries(%zu): %s",
+                fTrackID, fParentID, fParticleName.Data(), fCreatorProcess.Data(), fInitialKineticEnergy,
+                fTrackLength, GetTrackTimeLength(), fSecondaryTrackIDs.size(), secondariesString.Data())
+         << endl;
+
+    fHits.Print(numberOfHitsToPrintLimit);
+}

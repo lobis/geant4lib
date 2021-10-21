@@ -58,6 +58,8 @@ class TRestGeant4Event : public TRestEvent {
 
     std::map<TString, Float_t> fEnergyDepositedInVolumeMap{};
 
+    std::map<Int_t, Int_t> fTrackIDToIndex{};  //! // Used to retrieve track by ID faster
+
    public:
     void InsertTrack(const G4Track*);
     void UpdateTrack(const G4Track*);
@@ -68,6 +70,7 @@ class TRestGeant4Event : public TRestEvent {
     inline void SetSubEventID(Int_t subEventID) { fSubEventID = subEventID; }
     inline Float_t GetSensitiveVolumeEnergy() const { return fSensitiveVolumeEnergy; }
     inline void AddSensitiveVolumeEnergy(Float_t energy) { fSensitiveVolumeEnergy += energy; }
+    inline void AddTotalEnergy(Float_t energy) { fTotalDepositedEnergy += energy; }
     inline Bool_t IsEmpty() const { return fTracks.empty(); }
 
     inline TVector3 GetPrimaryEventOrigin() { return fPrimaryPosition[0]; }
@@ -175,7 +178,11 @@ class TRestGeant4Event : public TRestEvent {
 
     /// maxTracks : number of tracks to print, 0 = all
     void PrintActiveVolumes();
-    // void PrintEvent(int maxTracks = 0, int maxHits = 0);
+
+    void PrintEvent(size_t numberOfTracksToPrintLimit = 0, size_t numberOfHitsToPrintLimit = 0);
+    inline void Print(size_t numberOfTracksToPrintLimit = 0, size_t numberOfHitsToPrintLimit = 0) {
+        PrintEvent(numberOfTracksToPrintLimit, numberOfHitsToPrintLimit);
+    }
 
     TPad* DrawEvent(TString option = "") { return DrawEvent(option, true); }
     TPad* DrawEvent(TString option, Bool_t autoBoundaries);

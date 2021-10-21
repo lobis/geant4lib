@@ -18,6 +18,8 @@ class TRestGeant4Track {
     void UpdateTrack(const G4Track*);
     void InsertStep(const G4Step*);
 
+    void AddSecondary(Int_t trackID);
+
    protected:
     Int_t fTrackID;
     Int_t fParentID;
