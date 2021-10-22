@@ -29,16 +29,14 @@ void TRestGeant4EventViewer::Initialize() {
     fEvent = fG4Event;
 
     fHitConnectors.clear();
-    fHitConnectors.push_back(NULL);
+    fHitConnectors.push_back(nullptr);
 }
 
 void TRestGeant4EventViewer::DeleteCurrentEvent() {
-    // cout<<"Removing event"<<endl;
-
     TRestEveEventViewer::DeleteCurrentEvent();
 
     fHitConnectors.clear();
-    fHitConnectors.push_back(NULL);
+    fHitConnectors.push_back(nullptr);
 }
 
 void TRestGeant4EventViewer::AddEvent(TRestEvent* ev) {
@@ -133,13 +131,12 @@ void TRestGeant4EventViewer::AddEvent(TRestEvent* ev) {
             }
         }
     }
-    // cout << "Updating" << endl;
 
     Update();
 }
 
 void TRestGeant4EventViewer::AddText(const TString& text, const TVector3& at) {
-    TEveText* evText = new TEveText(text);
+    auto evText = new TEveText(text);
     evText->SetName("Event title");
     evText->SetFontSize(12);
     evText->RefMainTrans().SetPos((at.X() + 15) * GEOM_SCALE, (at.Y() + 15) * GEOM_SCALE,
@@ -149,7 +146,7 @@ void TRestGeant4EventViewer::AddText(const TString& text, const TVector3& at) {
 }
 
 void TRestGeant4EventViewer::AddMarker(Int_t trkID, const TVector3& at, const TString& name) {
-    TEvePointSet* marker = new TEvePointSet(1);
+    auto marker = new TEvePointSet(1);
     marker->SetName(name);
     marker->SetMarkerColor(kMagenta);
     marker->SetMarkerStyle(3);
@@ -158,12 +155,13 @@ void TRestGeant4EventViewer::AddMarker(Int_t trkID, const TVector3& at, const TS
     fHitConnectors[trkID]->AddElement(marker);
 }
 
-void TRestGeant4EventViewer::NextTrackVertex(Int_t trkID, TVector3 to) {
+void TRestGeant4EventViewer::NextTrackVertex(Int_t trkID, const TVector3& to) {
     fHitConnectors[trkID]->SetNextPoint(to.X() * GEOM_SCALE, to.Y() * GEOM_SCALE, to.Z() * GEOM_SCALE);
 }
 
-void TRestGeant4EventViewer::AddTrack(Int_t trkID, Int_t parentID, TVector3 from, TString name) {
-    TEveLine* evLine = new TEveLine();
+void TRestGeant4EventViewer::AddTrack(Int_t trkID, Int_t parentID, const TVector3& from,
+                                      const TString& name) {
+    auto evLine = new TEveLine();
     evLine->SetName(name);
     fHitConnectors.push_back(evLine);
 
@@ -186,8 +184,8 @@ void TRestGeant4EventViewer::AddTrack(Int_t trkID, Int_t parentID, TVector3 from
     }
 }
 
-void TRestGeant4EventViewer::AddParentTrack(Int_t trkID, TVector3 from, TString name) {
-    TEveLine* evLine = new TEveLine();
+void TRestGeant4EventViewer::AddParentTrack(Int_t trkID, const TVector3& from, const TString& name) {
+    auto evLine = new TEveLine();
     evLine->SetName(name);
     fHitConnectors.push_back(evLine);
 

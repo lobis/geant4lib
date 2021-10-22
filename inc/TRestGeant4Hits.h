@@ -43,6 +43,12 @@ class TRestGeant4Hits : public TRestHits {
     inline size_t GetSize() const { return fNHits; }             // defined in TRestHits but not const
     inline size_t GetNumberOfHits() const { return GetSize(); }  // defined in TRestHits but not const
     TVector3 GetPosition(size_t n) const;
+    /* Not sure why the parent class GetX/Y/Z don't work, probably something to
+        do with Float_t to Double_t conversion*/
+    Double_t GetX(size_t n) const { return GetPosition(n).x(); }
+    Double_t GetY(size_t n) const { return GetPosition(n).y(); }
+    Double_t GetZ(size_t n) const { return GetPosition(n).z(); }
+
     Float_t GetEnergy(size_t n) const { return fEnergy[n]; }
     Float_t GetTotalEnergy() const { return fTotEnergy; }
 

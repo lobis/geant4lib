@@ -36,6 +36,7 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
+#include <utility>
 #include <vector>
 
 //------------------------------------------------------------------------------------------------------------------------
@@ -115,10 +116,10 @@ class TRestGeant4Metadata : public TRestMetadata {
     TString fGeometryPath;  //!
 
     /// The filename of the GDML geometry
-    TString fGDML_Filename;  //!
+    TString fGdmlFilename;  //!
 
     /// A GDML geometry reference introduced in the header of the GDML main setup
-    TString fGDML_Reference;
+    TString fGdmlReference;
 
     /// A GDML materials reference introduced in the header of the GDML of materials definition
     TString fMaterialsReference;
@@ -245,10 +246,10 @@ class TRestGeant4Metadata : public TRestMetadata {
     TString GetGeometryPath() { return fGeometryPath; }
 
     /// Returns the main filename of the GDML geometry
-    TString Get_GDML_Filename() { return fGDML_Filename; }
+    TString GetGdmlFilename() { return fGdmlFilename; }
 
     /// Returns the reference provided at the GDML file header
-    TString Get_GDML_Reference() { return fGDML_Reference; }
+    TString GetGdmlReference() { return fGdmlReference; }
 
     /// Returns the reference provided at the materials file header
     TString GetMaterialsReference() { return fMaterialsReference; }
@@ -323,7 +324,7 @@ class TRestGeant4Metadata : public TRestMetadata {
     void SetSaveAllEvents(const Bool_t value) { fSaveAllEvents = value; }
 
     /// Sets the value of the Geant4 version
-    void SetGeant4Version(TString g4Version) { fGeant4Version = g4Version; }
+    void SetGeant4Version(TString g4Version) { fGeant4Version = std::move(g4Version); }
 
     ///  \brief Sets the generator type. I.e. volume, surface, point, virtualWall,
     ///  virtualCylinder, etc.
@@ -337,7 +338,7 @@ class TRestGeant4Metadata : public TRestMetadata {
     void SetFullChain(Bool_t fullChain) { fFullChain = fullChain; }
 
     ///  Sets the position of the virtual generator using a TVector3.
-    void SetGeneratorPosition(TVector3 pos) { fGenPosition = pos; }
+    void SetGeneratorPosition(const TVector3& pos) { fGenPosition = pos; }
 
     ///  Sets the position of the virtual generator using x,y,z coordinates.
     void SetGeneratorPosition(double x, double y, double z) { fGenPosition = TVector3(x, y, z); }
@@ -346,25 +347,25 @@ class TRestGeant4Metadata : public TRestMetadata {
     void SetNEvents(Int_t n) { fNEvents = n; }
 
     /// It sets the location of the geometry files
-    void SetGeometryPath(string path) { fGeometryPath = path; }
+    void SetGeometryPath(const string& path) { fGeometryPath = path; }
 
     /// It sets the main filename to be used for the GDML geometry
-    void Set_GDML_Filename(string gdmlFile) { fGDML_Filename = gdmlFile; }
+    void Set_GDML_Filename(const string& gdmlFile) { fGdmlFilename = gdmlFile; }
 
     /// Returns the reference provided at the GDML file header
-    void Set_GDML_Reference(string reference) { fGDML_Reference = reference; }
+    void Set_GDML_Reference(const string& reference) { fGdmlReference = reference; }
 
     /// Returns the reference provided at the materials file header
-    void SetMaterialsReference(string reference) { fMaterialsReference = reference; }
+    void SetMaterialsReference(const string& reference) { fMaterialsReference = reference; }
 
     /// Returns the number of events to be simulated.
-    Int_t GetNumberOfEvents() { return fNEvents; }
+    Int_t GetNumberOfEvents() const { return fNEvents; }
     ///////////////////////////////////////////////////////////
 
     // Direct access to sources definition in primary generator
     ///////////////////////////////////////////////////////////
     /// Returns the number of primary event sources defined in the generator.
-    Int_t GetNumberOfSources() { return fParticleSource.size(); }
+    size_t GetNumberOfSources() const { return fParticleSource.size(); }
 
     /// Returns the name of the particle source with index n (Geant4 based names).
     TRestGeant4ParticleSource* GetParticleSource(int n) { return fParticleSource[n]; }

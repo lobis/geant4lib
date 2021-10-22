@@ -1,8 +1,6 @@
 
 #include "TRestGeant4Hits.h"
 
-#include <iostream>
-
 using namespace std;
 
 ClassImp(TRestGeant4Hits);
