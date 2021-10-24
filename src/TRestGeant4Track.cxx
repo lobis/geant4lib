@@ -15,6 +15,10 @@ TVector3 TRestGeant4Track::GetTrackOrigin() const {
     return fHits.GetPosition(0);
 }
 
+size_t TRestGeant4Track::GetNumberOfHitsInVolume(const TString& volumeName) const {
+    return fHits.GetNumberOfHitsInVolume(volumeName);
+}
+
 EColor TRestGeant4Track::GetParticleColor() const {
     EColor color = kGray;
 

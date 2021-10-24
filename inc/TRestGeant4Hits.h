@@ -42,6 +42,8 @@ class TRestGeant4Hits : public TRestHits {
     // TRestHits derived Getters
     inline size_t GetSize() const { return fNHits; }             // defined in TRestHits but not const
     inline size_t GetNumberOfHits() const { return GetSize(); }  // defined in TRestHits but not const
+    size_t GetNumberOfHitsInVolume(const TString& volumeName) const;
+
     TVector3 GetPosition(size_t n) const;
     /* Not sure why the parent class GetX/Y/Z don't work, probably something to
         do with Float_t to Double_t conversion*/
@@ -76,8 +78,6 @@ class TRestGeant4Hits : public TRestHits {
     TVector3 GetMeanPositionInVolume(const TString& volumeName) const;
     TVector3 GetFirstPositionInVolume(const TString& volumeName) const;
     TVector3 GetLastPositionInVolume(const TString& volumeName) const;
-
-    inline size_t GetNumberOfHitsInVolume(const TString& volumeName) const;
 
     ClassDef(TRestGeant4Hits, 7);
 };

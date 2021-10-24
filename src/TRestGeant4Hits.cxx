@@ -44,6 +44,16 @@ Float_t TRestGeant4Hits::GetKineticEnergy(size_t n, Bool_t post) const {
     return fKineticEnergy[n];
 }
 
+size_t TRestGeant4Hits::GetNumberOfHitsInVolume(const TString& volumeName) const {
+    size_t count = 0;
+    for (int n = 0; n < fNHits; n++) {
+        if (fVolumeName[n].EqualTo(volumeName)) {
+            count += 1;
+        }
+    }
+    return count;
+}
+
 // Analysis methods
 
 Float_t TRestGeant4Hits::GetEnergyInVolume(const TString& volumeName) const {
@@ -89,14 +99,4 @@ TVector3 TRestGeant4Hits::GetLastPositionInVolume(const TString& volumeName) con
         }
     Double_t nan = TMath::QuietNaN();
     return {nan, nan, nan};
-}
-
-size_t TRestGeant4Hits::GetNumberOfHitsInVolume(const TString& volumeName) const {
-    size_t count = 0;
-    for (int n = 0; n < fNHits; n++) {
-        if (fVolumeName[n].EqualTo(volumeName)) {
-            count += 1;
-        }
-    }
-    return count;
 }

@@ -33,9 +33,9 @@ class TRestGeant4Event : public TRestEvent {
    protected:
     Int_t fRunOrigin;
 
-    Int_t fRunID; // Geant4 Run ID
-    //Int_t fEventID;
-    //Int_t fSubEventID;
+    Int_t fRunID;  // Geant4 Run ID
+    // Int_t fEventID;
+    // Int_t fSubEventID;
 
     TVector3 fPrimaryEventOrigin;
 
@@ -83,6 +83,9 @@ class TRestGeant4Event : public TRestEvent {
 
     inline size_t GetNumberOfTracks() const { return fTracks.size(); }
     size_t GetNumberOfHits() const;
+    size_t GetNumberOfHitsInVolume(const TString& volumeName) const;
+
+    const std::vector<TRestGeant4Track> GetTracks() const { return fTracks; }
 
    private:
     Double_t fMinX, fMaxX;            //!

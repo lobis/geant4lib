@@ -223,12 +223,12 @@ class TRestGeant4Metadata : public TRestMetadata {
     Bool_t fSaveAllEvents = 0;
 
     /// If this parameter is set to 'true' it will print out on screen every time 10k events are reached.
-    Bool_t fPrintProgress = 0;  //!
+    Bool_t fPrintProgress = false;  //!
 
     /// \brief If this parameter is enabled it will register tracks with no hits inside. This is the default
     /// behaviour. If it is disabled then empty tracks will not be written to disk at the risk of loosing
     /// traceability, but saving disk space and likely improving computing performance for extense events.
-    Bool_t fRegisterEmptyTracks = 1;
+    Bool_t fRegisterEmptyTracks = true;
 
     /// The world magnetic field
     TVector3 fMagneticField = TVector3(0, 0, 0);
@@ -328,11 +328,11 @@ class TRestGeant4Metadata : public TRestMetadata {
 
     ///  \brief Sets the generator type. I.e. volume, surface, point, virtualWall,
     ///  virtualCylinder, etc.
-    void SetGeneratorType(TString type) { fGenType = type; }
+    void SetGeneratorType(TString type) { fGenType = std::move(type); }
 
     ///  \brief Sets the generator main spatial dimension. In a virtual generator is the
     ///  radius of cylinder, size of wall, etc.
-    void SetGeneratorSize(TVector3 size) { fGenSize = size; }
+    void SetGeneratorSize(const TVector3& size) { fGenSize = size; }
 
     ///  Enables/disables the full chain decay generation.
     void SetFullChain(Bool_t fullChain) { fFullChain = fullChain; }
@@ -400,11 +400,32 @@ class TRestGeant4Metadata : public TRestMetadata {
     /// storage volume with index n.
     Double_t GetStorageChance(Int_t n) { return fChance[n]; }
 
+    /// \brief Returns a list of all physical volumes in the geometry
+    std::vector<TString> GetPhysicalVolumes() const { return fGeometryVolumes; }
+
+    Bool_t IsValidVolumeName(const TString& volumeName) const {
+        return fLogicalVolumesMap.count(volumeName) == 1;
+    }
+    /// \brief Returns a list of all logical volumes in the geometry
+    std::vector<TString> GetLogicalVolumes() const;
+
+    /// \brief Returns a the physical volume name of a given logical volume name, if it is unique
+    TString GetUniquePhysicalVolumeFromLogical(const TString& logicalVolumeName) const;
+
+    /// \brief Returns a container with all physical volume names of a given logical volume name
+    std::vector<TString> GetAllPhysicalVolumeFromLogical(const TString& logicalVolumeName) const;
+
+    /// \brief Returns a list of all logical volumes in the geometry
+    std::vector<TString> GetMaterialNames() const;  // TODO: Implement this
+
+    /// \brief Returns the logical volume name of a physical volume (returns "" if not found)
+    TString GetLogicalVolume(const TString& physicalVolumeName) const;
+
     /// Returns the probability per event to register (write to disk) hits in a
     /// GDML volume given its geometry name.
-    Double_t GetStorageChance(TString vol);
+    Double_t GetStorageChance(const TString& vol);
 
-    Double_t GetMaxStepSize(TString vol);
+    Double_t GetMaxStepSize(const TString& vol);
 
     /// Returns the minimum event energy required for an event to be stored.
     Double_t GetMinimumEnergyStored() { return fEnergyRangeStored.X(); }
@@ -422,11 +443,11 @@ class TRestGeant4Metadata : public TRestMetadata {
     /// Returns the world magnetic field in Tesla
     TVector3 GetMagneticField() { return fMagneticField; }
 
-    Int_t GetActiveVolumeID(TString name);
+    Int_t GetActiveVolumeID(const TString& name);
 
-    Bool_t isVolumeStored(TString volName);
+    Bool_t isVolumeStored(const TString& volName);
 
-    void SetActiveVolume(TString name, Double_t chance, Double_t maxStep = 0);
+    void SetActiveVolume(const TString& name, Double_t chance, Double_t maxStep = 0);
 
     void PrintMetadata();
 

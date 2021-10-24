@@ -41,6 +41,7 @@ class TRestGeant4Track {
 
    public:
     inline size_t GetNumberOfHits() const { return fHits.GetNumberOfHits(); }
+    size_t GetNumberOfHitsInVolume(const TString& volumeName) const;
     inline TString GetParticleName() const { return fParticleName; }
     inline TString GetParticleType() const { return fParticleType; }
     inline TString GetParticleSubType() const { return fParticleSubType; }
@@ -79,9 +80,6 @@ class TRestGeant4Track {
     }
     inline TVector3 GetLastPositionInVolume(const TString& volumeName) const {
         return fHits.GetLastPositionInVolume(volumeName);
-    }
-    inline size_t GetNumberOfHitsInVolume(const TString& volumeName) const {
-        return fHits.GetNumberOfHitsInVolume(volumeName);
     }
 
     ClassDef(TRestGeant4Track, 3);  // REST event superclass

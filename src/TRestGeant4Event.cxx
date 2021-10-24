@@ -244,6 +244,13 @@ size_t TRestGeant4Event::GetNumberOfHits() const {
     return n;
 }
 
+size_t TRestGeant4Event::GetNumberOfHitsInVolume(const TString& volumeName) const {
+    size_t n = 0;
+    for (const auto& track : fTracks) {
+        n += track.GetNumberOfHitsInVolume(volumeName);
+    }
+    return n;
+}
 /*
 ///////////////////////////////////////////////
 /// \brief Function that returns the total number of hits in the Geant4 event. If

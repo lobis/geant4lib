@@ -776,8 +776,7 @@ void TRestGeant4Metadata::InitFromConfigFile() {
 
     // if "gdml_file" is purely a file (without any path) and "geometryPath" is
     // defined, we recombine them together
-    if ((((string)fGdmlFilename).find_first_not_of("./~") == 0 ||
-         ((string)fGdmlFilename).find("/") == -1) &&
+    if ((((string)fGdmlFilename).find_first_not_of("./~") == 0 || ((string)fGdmlFilename).find("/") == -1) &&
         fGeometryPath != "") {
         if (fGeometryPath[fGeometryPath.Length() - 1] == '/') {
             fGdmlFilename = fGeometryPath + GetParameter("gdml_file");
@@ -1179,6 +1178,16 @@ void TRestGeant4Metadata::PrintMetadata() {
     }
 
     metadata << "**********Storage Volumes**********" << endl;
+    metadata << "Geometry Volumes: " << fGeometryVolumes.size() << endl;
+    metadata << "---------------------------------------" << endl;
+    for (const auto& physicalVolumeName : fGeometryVolumes) {
+        metadata << "Physical: " << physicalVolumeName
+                 << " - Logical: " << GetLogicalVolume(physicalVolumeName)
+                 << " - Material: " << fLogicalVolumesMaterialMap[GetLogicalVolume(physicalVolumeName)]
+                 << endl;
+    }
+    metadata << "---------------------------------------" << endl;
+
     metadata << "Energy range : Emin = " << GetMinimumEnergyStored()
              << ", Emax : " << GetMaximumEnergyStored() << endl;
     metadata << "Sensitive volume : " << GetSensitiveVolume() << endl;
@@ -1520,7 +1529,7 @@ void TRestGeant4Metadata::PrintGeometryInfo() const {
 
 ///////////////////////////////////////////////
 /// \brief Returns the id of an active volume giving as parameter its name.
-Int_t TRestGeant4Metadata::GetActiveVolumeID(TString name) {
+Int_t TRestGeant4Metadata::GetActiveVolumeID(const TString& name) {
     Int_t id;
     for (id = 0; id < (Int_t)fActiveVolumes.size(); id++) {
         if (fActiveVolumes[id] == name) return id;
@@ -1542,7 +1551,7 @@ Int_t TRestGeant4Metadata::GetActiveVolumeID(TString name) {
 /// The aim of this parameter is to define control volumes. Usually the volume
 /// of interest will be always registered (chance=1).
 ///
-void TRestGeant4Metadata::SetActiveVolume(TString name, Double_t chance, Double_t maxStep) {
+void TRestGeant4Metadata::SetActiveVolume(const TString& name, Double_t chance, Double_t maxStep) {
     fActiveVolumes.push_back(name);
     fChance.push_back(chance);
     fMaxStepSize.push_back(maxStep);
@@ -1552,7 +1561,7 @@ void TRestGeant4Metadata::SetActiveVolume(TString name, Double_t chance, Double_
 /// \brief Returns true if the volume named *volName* has been registered for
 /// data storage.
 ///
-Bool_t TRestGeant4Metadata::isVolumeStored(TString volName) {
+Bool_t TRestGeant4Metadata::isVolumeStored(const TString& volName) {
     for (int n = 0; n < GetNumberOfActiveVolumes(); n++)
         if (GetActiveVolumeName(n) == volName) return true;
 
@@ -1562,7 +1571,7 @@ Bool_t TRestGeant4Metadata::isVolumeStored(TString volName) {
 ///////////////////////////////////////////////
 /// \brief Returns the probability of an active volume being stored
 ///
-Double_t TRestGeant4Metadata::GetStorageChance(TString vol) {
+Double_t TRestGeant4Metadata::GetStorageChance(const TString& vol) {
     Int_t id;
     for (id = 0; id < (Int_t)fActiveVolumes.size(); id++) {
         if (fActiveVolumes[id] == vol) return fChance[id];
@@ -1572,10 +1581,70 @@ Double_t TRestGeant4Metadata::GetStorageChance(TString vol) {
     return 0;
 }
 
+TString TRestGeant4Metadata::GetLogicalVolume(const TString& physicalVolumeName) const {
+    if (fLogicalVolumesMap.count(physicalVolumeName) == 0) {
+        return "";
+    }
+    return fLogicalVolumesMap.at(physicalVolumeName);
+}
+
+std::vector<TString> TRestGeant4Metadata::GetLogicalVolumes() const {
+    set<TString> logicalVolumesSet;
+    for (const auto& volumeName : fGeometryVolumes) {
+        logicalVolumesSet.insert(GetLogicalVolume(volumeName));
+    }
+
+    vector<TString> result;
+    for (const auto& logicalVolume : logicalVolumesSet) {
+        if (logicalVolume.IsNull()) {
+            // This should never happen
+            warning << "TRestGeant4Metadata::GetLogicalVolumes" << endl;
+            exit(1);
+        }
+        result.emplace_back(logicalVolume);
+    }
+    return result;
+}
+
+TString TRestGeant4Metadata::GetUniquePhysicalVolumeFromLogical(const TString& logicalVolumeName) const {
+    // this will only return a physical volume name if its unique (logical <-> physical)
+    TString name;
+    for (const auto& volumeName : fGeometryVolumes) {
+        auto logical = GetLogicalVolume(volumeName);
+        if (logical == logicalVolumeName) {
+            if (!name.IsNull()) {
+                // It is not unique, found at least twice...
+                return TString();  // return an empty string
+            } else {
+                name = volumeName;
+            }
+        }
+    }
+    return name;
+}
+
+std::vector<TString> TRestGeant4Metadata::GetAllPhysicalVolumeFromLogical(
+    const TString& logicalVolumeName) const {
+    std::set<TString> volumes;
+
+    for (const auto& volumeName : fGeometryVolumes) {
+        auto logical = GetLogicalVolume(volumeName);
+        if (logical == logicalVolumeName) {
+            volumes.insert(volumeName);
+        }
+    }
+
+    std::vector<TString> volumesVector;
+    for (const auto& volume : volumes) {
+        volumesVector.push_back(volume);
+    }
+    return volumesVector;
+}
+
 ///////////////////////////////////////////////
 /// \brief Returns the maximum step at a particular active volume
 ///
-Double_t TRestGeant4Metadata::GetMaxStepSize(TString vol) {
+Double_t TRestGeant4Metadata::GetMaxStepSize(const TString& vol) {
     for (Int_t id = 0; id < (Int_t)fActiveVolumes.size(); id++) {
         if (fActiveVolumes[id] == vol) return fMaxStepSize[id];
     }
