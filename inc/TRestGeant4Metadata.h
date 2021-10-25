@@ -415,6 +415,10 @@ class TRestGeant4Metadata : public TRestMetadata {
     /// \brief Returns a container with all physical volume names of a given logical volume name
     std::vector<TString> GetAllPhysicalVolumeFromLogical(const TString& logicalVolumeName) const;
 
+    inline TVector3 GetPhysicalVolumePosition(const TString& volumeName) const {
+        return fPhysicalVolumesPosition.at(volumeName);
+    }
+
     /// \brief Returns a list of all logical volumes in the geometry
     std::vector<TString> GetMaterialNames() const;  // TODO: Implement this
 
