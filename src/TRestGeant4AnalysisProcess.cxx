@@ -286,16 +286,16 @@ void TRestGeant4AnalysisProcess::InitProcess() {
     fObservables = TRestEventProcess::ReadObservables();
 
     if (fPerProcessSensitiveEnergy) {
-        fObservables.push_back("PerProcessPhotoelectric");
-        fObservables.push_back("PerProcessCompton");
-        fObservables.push_back("PerProcessElectronicIoni");
-        fObservables.push_back("PerProcessAlphaIoni");
-        fObservables.push_back("PerProcessIonIoni");
-        fObservables.push_back("PerProcessHadronicIoni");
-        fObservables.push_back("PerProcessProtonIoni");
-        fObservables.push_back("PerProcessMsc");
-        fObservables.push_back("PerProcessHadronElastic");
-        fObservables.push_back("PerProcessNeutronElastic");
+        fObservables.emplace_back("PerProcessPhotoelectric");
+        fObservables.emplace_back("PerProcessCompton");
+        fObservables.emplace_back("PerProcessElectronicIoni");
+        fObservables.emplace_back("PerProcessAlphaIoni");
+        fObservables.emplace_back("PerProcessIonIoni");
+        fObservables.emplace_back("PerProcessHadronicIoni");
+        fObservables.emplace_back("PerProcessProtonIoni");
+        fObservables.emplace_back("PerProcessMsc");
+        fObservables.emplace_back("PerProcessHadronElastic");
+        fObservables.emplace_back("PerProcessNeutronElastic");
     }
     for (unsigned int i = 0; i < fObservables.size(); i++) {
         if (fObservables[i].find("VolumeEDep") != string::npos) {
@@ -303,8 +303,8 @@ void TRestGeant4AnalysisProcess::InitProcess() {
 
             Int_t volId = fG4Metadata->GetActiveVolumeID(volName);
             if (volId >= 0) {
-                fEnergyInObservables.push_back(fObservables[i]);
-                fVolumeID.push_back(volId);
+                fEnergyInObservables.emplace_back(fObservables[i]);
+                fVolumeID.emplace_back(volId);
             }
 
             if (volId == -1) {
@@ -327,13 +327,13 @@ void TRestGeant4AnalysisProcess::InitProcess() {
 
         if (fObservables[i].find("MeanPos") != string::npos) {
             TString volName2 = fObservables[i].substr(0, fObservables[i].length() - 8).c_str();
-            std::string dirId = fObservables[i].substr(fObservables[i].length() - 1, 1).c_str();
+            std::string dirId = fObservables[i].substr(fObservables[i].length() - 1, 1);
 
             Int_t volId2 = fG4Metadata->GetActiveVolumeID(volName2);
             if (volId2 >= 0) {
-                fMeanPosObservables.push_back(fObservables[i]);
-                fVolumeID2.push_back(volId2);
-                fDirID.push_back(dirId);
+                fMeanPosObservables.emplace_back(fObservables[i]);
+                fVolumeID2.emplace_back(volId2);
+                fDirID.emplace_back(dirId);
             }
 
             if (volId2 == -1) {
@@ -385,23 +385,23 @@ void TRestGeant4AnalysisProcess::InitProcess() {
             Int_t volId3 = fG4Metadata->GetActiveVolumeID(volName3);
 
             if (volId3 >= 0) {
-                fProcessObservables.push_back(fObservables[i]);
-                fVolumeID3.push_back(volId3);
-                fProcessName.push_back((string)processName);
+                fProcessObservables.emplace_back(fObservables[i]);
+                fVolumeID3.emplace_back(volId3);
+                fProcessName.emplace_back((string)processName);
             }
         }
         if (fObservables[i].find("TracksCounter") != string::npos) {
             TString partName = fObservables[i].substr(0, fObservables[i].length() - 13).c_str();
 
-            fTrackCounterObservables.push_back(fObservables[i]);
-            fParticleTrackCounter.push_back((string)partName);
+            fTrackCounterObservables.emplace_back(fObservables[i]);
+            fParticleTrackCounter.emplace_back((string)partName);
         }
 
         if (fObservables[i].find("TracksEDep") != string::npos) {
             TString partName = fObservables[i].substr(0, fObservables[i].length() - 10).c_str();
 
-            fTracksEDepObservables.push_back(fObservables[i]);
-            fParticleTrackEdep.push_back((string)partName);
+            fTracksEDepObservables.emplace_back(fObservables[i]);
+            fParticleTrackEdep.emplace_back((string)partName);
         }
     }
 }

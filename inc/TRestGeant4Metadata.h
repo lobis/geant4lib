@@ -116,7 +116,10 @@ class TRestGeant4Metadata : public TRestMetadata {
     TString fGeometryPath;  //!
 
     /// The filename of the GDML geometry
-    TString fGdmlFilename;  //!
+    TString fGdmlFilename;
+
+    /// The contents of the GDML geometry
+    TString fGdmlFileContents;
 
     /// A GDML geometry reference introduced in the header of the GDML main setup
     TString fGdmlReference;
@@ -236,20 +239,26 @@ class TRestGeant4Metadata : public TRestMetadata {
    public:
     /// \brief Returns the random seed that was used to generate the corresponding
     /// geant4 dataset.
-    Long_t GetSeed() { return fSeed; }
+    Long_t GetSeed() const { return fSeed; }
 
     /// \brief Returns a string with the version of Geant4 used on the event data
     /// simulation
-    TString GetGeant4Version() { return fGeant4Version; }
+    TString GetGeant4Version() const { return fGeant4Version; }
 
     /// Returns the local path to the GDML geometry
-    TString GetGeometryPath() { return fGeometryPath; }
+    TString GetGeometryPath() const { return fGeometryPath; }
 
     /// Returns the main filename of the GDML geometry
-    TString GetGdmlFilename() { return fGdmlFilename; }
+    TString GetGdmlFilename() const { return fGdmlFilename; }
+
+    /// Returns the contents of the GDML geometry
+    TString GetGdmlFileContents() const { return fGdmlFileContents; }
 
     /// Returns the reference provided at the GDML file header
-    TString GetGdmlReference() { return fGdmlReference; }
+    TString GetGdmlReference() const { return fGdmlReference; }
+
+    /// Returns the contents of the gdml file
+    TString GetGdmlFileContents() { return fGdmlFileContents; }
 
     /// Returns the reference provided at the materials file header
     TString GetMaterialsReference() { return fMaterialsReference; }
@@ -350,10 +359,14 @@ class TRestGeant4Metadata : public TRestMetadata {
     void SetGeometryPath(const string& path) { fGeometryPath = path; }
 
     /// It sets the main filename to be used for the GDML geometry
-    void Set_GDML_Filename(const string& gdmlFile) { fGdmlFilename = gdmlFile; }
+    void SetGdmlFilename(const string& gdmlFile) { fGdmlFilename = gdmlFile; }
 
     /// Returns the reference provided at the GDML file header
-    void Set_GDML_Reference(const string& reference) { fGdmlReference = reference; }
+    void SetGdmlReference(const string& reference) { fGdmlReference = reference; }
+
+    void SetGdmlFileContents(const string& reference) { fGdmlFileContents = reference; }
+
+    void LoadGeometry();
 
     /// Returns the reference provided at the materials file header
     void SetMaterialsReference(const string& reference) { fMaterialsReference = reference; }
@@ -393,7 +406,7 @@ class TRestGeant4Metadata : public TRestMetadata {
     TString GetSensitiveVolume() { return fSensitiveVolume; }
 
     /// Sets the name of the sensitive volume
-    void SetSensitiveVolume(TString sensVol) { fSensitiveVolume = sensVol; }
+    void SetSensitiveVolume(TString sensVol) { fSensitiveVolume = std::move(sensVol); }
     ///////////////////////////////////////////////////////////
 
     /// \brief Returns the probability per event to register (write to disk) hits in the

@@ -1652,3 +1652,24 @@ Double_t TRestGeant4Metadata::GetMaxStepSize(const TString& vol) {
 
     return 0;
 }
+
+/// \brief Load a TGeoManager with the current geometry (if stored in file)
+void TRestGeant4Metadata::LoadGeometry() {
+    TString geometryString = GetGdmlFileContents();
+    if (geometryString.IsNull()) {
+        cout << "Geometry is not saved in TRestGeant4Metadata as string" << endl;
+        return;
+    }
+
+    const TString tmpFilename = "/tmp/tmpGeometryToDraw.gdml";
+    std::ofstream out(tmpFilename);
+    out << geometryString;
+    out.close();
+
+    TGeoManager::Import(tmpFilename);
+
+    if (!gGeoManager) {
+        cout << "Error loading geometry from '" << tmpFilename << "'" << endl;
+        return;
+    }
+}
