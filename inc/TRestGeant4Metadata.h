@@ -214,6 +214,18 @@ class TRestGeant4Metadata : public TRestMetadata {
     /// deposit a non-zero energy on this volume will be registered.
     TString fSensitiveVolume;
 
+    /// \brief The volumes that serves as trigger for data storage. Only events that
+    /// deposit a non-zero energy on this volume will be registered.
+    std::vector<TString> fSensitiveVolumes;
+
+    std::vector<TString> fTrackingVolumes;
+
+    std::map<TString, Bool_t> fMaxStepSizeMap;
+
+    static constexpr Double_t fMaxStepSizeDefault = 0.1; /* mm */
+
+    static constexpr Double_t fMaxStepSizeSensitiveDefault = 0.05; /* mm */
+
     /// The number of events simulated, or to be simulated.
     Int_t fNEvents;
 
@@ -223,7 +235,7 @@ class TRestGeant4Metadata : public TRestMetadata {
 
     /// \brief If this parameter is set to 'true' it will save all events even if they leave no energy in the
     /// sensitive volume (used for debugging pourposes). It is set to 'false' by default.
-    Bool_t fSaveAllEvents = 0;
+    Bool_t fSaveAllEvents = false;
 
     /// If this parameter is set to 'true' it will print out on screen every time 10k events are reached.
     Bool_t fPrintProgress = false;  //!
@@ -306,6 +318,20 @@ class TRestGeant4Metadata : public TRestMetadata {
     /// \brief Returns the value of the maximum Geant4 step size in mm for the
     /// target volume.
     Double_t GetMaxTargetStepSize() { return fMaxTargetStepSize; }
+
+    Double_t GetMaxStepSize(const TString& volumeName) const {
+        if (fMaxStepSizeMap.count(volumeName) > 0) {
+            return fMaxStepSizeMap.at(volumeName);
+        } else {
+            // check if volume is sensitive
+            for (const auto& sensitiveVolume : fSensitiveVolumes) {
+                if (volumeName.EqualTo(sensitiveVolume)) {
+                    return fMaxStepSizeSensitiveDefault;
+                }
+            }
+        }
+        return fMaxStepSizeDefault;
+    }
 
     /// \brief Returns the time gap, in us, required to consider a Geant4 hit as a
     /// new independent event. It is used to separate simulated events that in
@@ -408,6 +434,64 @@ class TRestGeant4Metadata : public TRestMetadata {
     /// Sets the name of the sensitive volume
     void SetSensitiveVolume(TString sensVol) { fSensitiveVolume = std::move(sensVol); }
     ///////////////////////////////////////////////////////////
+    inline void AddSensitiveVolume(const TString& volumeName) {
+        for (const auto& name : fSensitiveVolumes) {
+            if (name.EqualTo(volumeName)) {
+                // already added
+                return;
+            }
+        }
+        fSensitiveVolumes.emplace_back(volumeName);
+    }
+
+    inline void AddTrackingVolume(const TString& volumeName) {
+        for (const auto& name : fTrackingVolumes) {
+            if (name.EqualTo(volumeName)) {
+                // already added
+                return;
+            }
+        }
+        fTrackingVolumes.emplace_back(volumeName);
+    }
+
+    inline void AddActiveVolume(const TString& volumeName) {
+        for (const auto& name : fActiveVolumes) {
+            if (name.EqualTo(volumeName)) {
+                // already added
+                return;
+            }
+        }
+        fActiveVolumes.emplace_back(volumeName);
+    }
+
+    inline const std::vector<TString> GetActiveVolumes() const { return fActiveVolumes; }
+    inline const std::vector<TString> GetSensitiveVolumes() const { return fSensitiveVolumes; }
+    inline const std::vector<TString> GetTrackingVolumes() const { return fTrackingVolumes; }
+
+    inline void RemoveActiveVolume(const TString& volumeName) {
+        for (size_t i = 0; i < fActiveVolumes.size(); i++) {
+            if (fActiveVolumes[i].EqualTo(volumeName)) {
+                fActiveVolumes.erase(fActiveVolumes.begin() + i);
+                return;
+            }
+        }
+    }
+    inline void RemoveTrackingVolume(const TString& volumeName) {
+        for (size_t i = 0; i < fTrackingVolumes.size(); i++) {
+            if (fTrackingVolumes[i].EqualTo(volumeName)) {
+                fTrackingVolumes.erase(fTrackingVolumes.begin() + i);
+                return;
+            }
+        }
+    }
+    inline void RemoveSensitiveVolume(const TString& volumeName) {
+        for (size_t i = 0; i < fSensitiveVolumes.size(); i++) {
+            if (fSensitiveVolumes[i].EqualTo(volumeName)) {
+                fSensitiveVolumes.erase(fSensitiveVolumes.begin() + i);
+                return;
+            }
+        }
+    }
 
     /// \brief Returns the probability per event to register (write to disk) hits in the
     /// storage volume with index n.
@@ -442,7 +526,7 @@ class TRestGeant4Metadata : public TRestMetadata {
     /// GDML volume given its geometry name.
     Double_t GetStorageChance(const TString& vol);
 
-    Double_t GetMaxStepSize(const TString& vol);
+    // Double_t GetMaxStepSize(const TString& vol);
 
     /// Returns the minimum event energy required for an event to be stored.
     Double_t GetMinimumEnergyStored() { return fEnergyRangeStored.X(); }

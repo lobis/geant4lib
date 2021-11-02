@@ -1053,71 +1053,57 @@ void TRestGeant4Metadata_addDaughters(TGeoNode* node, set<string>* logicalVolume
 ///
 void TRestGeant4Metadata::ReadStorage() {
     TiXmlElement* storageDefinition = GetElement("storage");
-    fSensitiveVolume = GetFieldValue("sensitiveVolume", storageDefinition);
-    if (fSensitiveVolume == "Not defined") {
-        warning << "Sensitive volume not defined. Setting it to 'gas'!!!!" << endl;
-        fSensitiveVolume = "gas";
-    }
-    Double_t defaultStep = GetDblParameterWithUnits("maxStepSize", storageDefinition);
-    if (defaultStep < 0) defaultStep = 0;
-
-    info << "Sensitive volume : " << fSensitiveVolume << endl;
 
     fEnergyRangeStored = Get2DVectorParameterWithUnits("energyRange", storageDefinition);
 
-    TRestGDMLParser* gdml = new TRestGDMLParser();
-    gdml->Load((string)GetGdmlFilename());
-
-    TGeoManager::Import((TString)gdml->GetOutputGDMLFile());
-
-    // recursively add all non-assembly volume names, which should be unique according to GDML definition
-
-    set<string> logicalVolumesSet;
-    set<string> physicalVolumesSet;
-    set<string> assembliesSet;
-
-    TRestGeant4Metadata_addDaughters(gGeoManager->GetTopNode(), &logicalVolumesSet, &physicalVolumesSet,
-                                     &assembliesSet);
-
-    // debugging
-    const map<string, set<string>> m = {
-        {"Physical", physicalVolumesSet}, {"Logical", logicalVolumesSet}, {"Assembly", assembliesSet}};
-    for (auto const& kv : m) {
-        cout << kv.first << " Volumes:" << endl;
-        for (const auto& volume : kv.second) cout << "\t" << volume << endl;
-        cout << endl;
-    }
-
     TiXmlElement* volumeDefinition = GetElement("activeVolume", storageDefinition);
     while (volumeDefinition) {
-        Double_t chance = StringToDouble(GetFieldValue("chance", volumeDefinition));
-        if (chance == -1) chance = 1;
-
-        Double_t maxStp = GetDblParameterWithUnits("maxStepSize", volumeDefinition);
-        if (maxStp < 0) maxStp = defaultStep;
+        Double_t chance = GetDblParameterWithUnits("chance", volumeDefinition, 1);
+        Double_t maxStep = GetDblParameterWithUnits("maxStepSize", volumeDefinition, 1 /* mm */);
 
         TString name = GetFieldValue("name", volumeDefinition);
 
-        // first we verify its in the list of valid volumes
-        if (physicalVolumesSet.find((string)name) == physicalVolumesSet.end()) {
-            // it is not on the container
-            ferr << "TRestGeant4Metadata. Problem reading storage section." << endl;
-            ferr << " 	- The volume '" << name << "' was not found in the GDML geometry." << endl;
-            exit(1);
-        } else {
-            SetActiveVolume(name, chance, maxStp);
-            info << "Adding active volume from RML: '" << name << "' with chance: " << chance << endl;
-        }
+        SetActiveVolume(name, chance, maxStep);
+        info << "Adding active volume from RML: '" << name << "' with chance: " << chance << endl;
+
         volumeDefinition = GetNextElement(volumeDefinition);
+    }
+
+    TiXmlElement* sensitiveVolumeDefinition = GetElement("sensitiveVolume", storageDefinition);
+    while (sensitiveVolumeDefinition) {
+        Double_t maxStep = GetDblParameterWithUnits("maxStepSize", sensitiveVolumeDefinition, 1 /* mm */);
+
+        TString name = GetFieldValue("name", sensitiveVolumeDefinition);
+
+        AddSensitiveVolume(name);
+        info << "Adding sensitive volume from RML: '" << name << endl;
+
+        sensitiveVolumeDefinition = GetNextElement(sensitiveVolumeDefinition);
+    }
+
+    TiXmlElement* trackingVolumeDefinition = GetElement("trackingVolume", storageDefinition);
+    while (trackingVolumeDefinition) {
+        Double_t maxStep = GetDblParameterWithUnits("maxStepSize", trackingVolumeDefinition, 1 /* mm */);
+
+        TString name = GetFieldValue("name", trackingVolumeDefinition);
+
+        AddSensitiveVolume(name);
+        info << "Adding tracking volume from RML: '" << name << endl;
+
+        trackingVolumeDefinition = GetNextElement(trackingVolumeDefinition);
     }
 
     // If the user didn't add explicitly any volume to the storage section we understand
     // the user wants to register all the volumes
-    if (GetNumberOfActiveVolumes() == 0)
+
+    /*
+    if (GetNumberOfActiveVolumes() == 0) {
         for (auto& name : physicalVolumesSet) {
-            SetActiveVolume(name, 1, defaultStep);
+            SetActiveVolume(name, 1, 0);
             info << "Automatically adding active volume: '" << name << "' with chance: " << 1 << endl;
         }
+    }
+     */
 }
 
 ///////////////////////////////////////////////
@@ -1190,7 +1176,13 @@ void TRestGeant4Metadata::PrintMetadata() {
 
     metadata << "Energy range : Emin = " << GetMinimumEnergyStored()
              << ", Emax : " << GetMaximumEnergyStored() << endl;
-    metadata << "Sensitive volume : " << GetSensitiveVolume() << endl;
+    metadata << "Sensitive volume: " << GetSensitiveVolume() << endl;
+    metadata << "Sensitive volumes: ";
+    for (const auto& volume : fSensitiveVolumes) {
+        metadata << volume << ", " << endl;
+    }
+    metadata << endl;
+
     metadata << "Active volumes : " << GetNumberOfActiveVolumes() << endl;
     metadata << "---------------------------------------" << endl;
     for (int n = 0; n < GetNumberOfActiveVolumes(); n++) {
@@ -1644,6 +1636,7 @@ std::vector<TString> TRestGeant4Metadata::GetAllPhysicalVolumeFromLogical(
 ///////////////////////////////////////////////
 /// \brief Returns the maximum step at a particular active volume
 ///
+/*
 Double_t TRestGeant4Metadata::GetMaxStepSize(const TString& vol) {
     for (Int_t id = 0; id < (Int_t)fActiveVolumes.size(); id++) {
         if (fActiveVolumes[id] == vol) return fMaxStepSize[id];
@@ -1652,6 +1645,7 @@ Double_t TRestGeant4Metadata::GetMaxStepSize(const TString& vol) {
 
     return 0;
 }
+*/
 
 /// \brief Load a TGeoManager with the current geometry (if stored in file)
 void TRestGeant4Metadata::LoadGeometry() {
